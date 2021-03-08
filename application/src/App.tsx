@@ -1,15 +1,63 @@
 import React, {useEffect, useState} from 'react';
-import { v4 as uuid } from 'uuid';
-import {connectWithPeer, onConnect} from "./app";
+import Button from "./Button";
+import {jss} from "react-jss";
+import defaultUnit from 'jss-plugin-default-unit'
+import SlidablePanel from './SlidablePanel'
+import Connection from "./Connection/view";
+import {onConnect} from "./Connection";
+import Player from "./Player";
+import UploadMusic from "./UploadMusic";
 
 function App() {
-  const [id, setId] = useState(uuid())
+  const styles = {
+    '@global': {
+      '*': {
+        margin: 0,
+        fontFamily: 'Montserrat',
+        color: 'white'
+      }
+    }
+  }
 
-  useEffect(onConnect, [])
+  const options = {
+    fontSize: 'rem',
+    borderRadius: 'rem',
+    width: 'rem',
+    height: 'rem',
+    padding: 'rem',
+    margin: 'rem'
+  }
 
-  return <div>
-      <h1>Hello {id}</h1>
-    </div>
+  jss.createStyleSheet(styles).attach()
+  jss.use(defaultUnit(options))
+
+  return <div
+    style={{
+      background: 'linear-gradient(0deg, #232323, #232323)',
+      height: '100vh',
+      boxSizing: 'border-box'
+    }}
+  >
+    {/*<Connection />*/}
+    <UploadMusic />
+    <SlidablePanel>
+      <p style={{
+        margin: '3rem 0',
+        textAlign: 'center',
+        fontSize: '12px',
+        textShadow: '0px 0px 18px 5px rgba(0, 0, 0, 1)'
+      }}>Free the music, free you feelings.<br />
+        Or some other bullshit</p>
+      <div style={{
+        display: 'flex',
+        width: '100%',
+        justifyContent: 'space-around'
+      }}>
+        <Button>Become a member</Button>
+        <Button variant='second'>Become a member</Button>
+      </div>
+    </SlidablePanel>
+  </div>
 }
 
 export default App;
