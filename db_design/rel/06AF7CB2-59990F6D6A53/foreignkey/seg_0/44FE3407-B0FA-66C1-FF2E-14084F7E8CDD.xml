@@ -1,0 +1,17 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="44FE3407-B0FA-66C1-FF2E-14084F7E8CDD" containerWithKeyObject="160E4851-2DBB-C567-200A-EACFD9A9D014" localFKIndex="87977B4E-3B6C-9480-F383-BA8517E23FA1" name="TRACK_BINARY_TRACK_FK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:15:49 UTC</createdTime>
+<generatorID>4E9481F6-8F9E-158F-0D63-9502A93D7122</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<referredTableLongName>TRACK</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>DF849FD0-4D6E-6891-29A6-A7CFBA5E06FE</referredTableID>
+<keyObject>F081D126-0E7A-DA8C-801C-3F2D97887176</keyObject>
+<referredKeyID>F081D126-0E7A-DA8C-801C-3F2D97887176</referredKeyID>
+<mandatory>true</mandatory>
+<refColNames>TRACKv1_ID</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>

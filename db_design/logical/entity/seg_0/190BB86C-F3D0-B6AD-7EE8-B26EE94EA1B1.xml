@@ -1,0 +1,49 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="190BB86C-F3D0-B6AD-7EE8-B26EE94EA1B1" name="TRACK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:21:45 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="name" id="91425D61-7D4C-9486-AD76-74028C5ACAE7">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:21:52 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="length" id="8185A35A-6D31-62E2-30F5-761D462233CC">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:23:33 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="binary_hash" id="52A7800A-194F-FC4A-DD0F-AF5DFB34E8E3">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:23:57 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+</Entity>

@@ -1,0 +1,39 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="A6D4BB22-13AC-7567-C579-BB0E8B7C4F52" name="TRACK_BINARY">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 19:49:32 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="binary_data" id="5B2872B4-9C4A-B9AD-5126-2C9D85EBC43D">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 19:54:49 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="hash" id="88AC5449-9ACF-D11B-BC25-381E7908C4BA">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 19:55:14 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<engineerTo>
+<item key="06AF7CB2-FF4F-E29B-6652-59990F6D6A53" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+</Entity>

@@ -1,0 +1,93 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="BDC87B0A-A7AF-32EC-75DD-84CD311E79DC" name="ARTIST_IDENTITY">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>A58E3D1D-946E-753F-55FF-187FC3740EEE</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="name" id="4E2F176C-09DF-8082-9011-8B28B7B297B3">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>943F983B-3330-924E-B83F-D5A0F1AE3543</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="genre" id="572A976B-DADE-152D-DA0D-05ED97C1F3E8">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>89DE2539-069C-E1FA-333B-D5F3EC8ED005</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="started" id="4BB6E031-2DB9-B53D-A3EA-91D4310EBEA2">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>5C2A92E9-3A1D-696B-4A26-A573344D7B09</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="ended" id="00A296B7-6224-7A43-E500-6EC25FC68E03">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>D86A4630-E359-EFB0-F593-B68B768AD7CE</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="origin" id="104E574A-9E74-50BC-BCB5-C64CB9FD5170">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>F707369C-B31C-E510-2A88-E05F876E0C26</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="user_token" id="E338E617-88D1-1CB1-0E1A-F69CF980E8A5">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<generatorID>23A0AC61-00E5-39A0-38E9-9B93D9AF8271</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="ARTIST_IDENTITY_ID" id="16CC8DB3-40B6-B884-3300-E57A17C59957">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementColumn>true</autoIncrementColumn>
+<identityColumn>true</identityColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<isSurrogateColumn>true</isSurrogateColumn>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="A1464480-7F92-727F-2EB6-5EA6C43EB891" name="ARTIST_IDENTITY_PK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 20:08:51 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<indexColumnUsage>
+<colUsage columnID="16CC8DB3-40B6-B884-3300-E57A17C59957"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

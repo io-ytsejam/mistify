@@ -1,0 +1,111 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="DF849FD0-4D6E-6891-29A6-A7CFBA5E06FE" name="TRACK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<generatorID>190BB86C-F3D0-B6AD-7EE8-B26EE94EA1B1</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="name" id="084EB143-E5DA-384F-734F-CFB613307C5F">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<generatorID>91425D61-7D4C-9486-AD76-74028C5ACAE7</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="length" id="CEC3FAF1-E435-304A-31C7-730C7FBD14A4">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<generatorID>8185A35A-6D31-62E2-30F5-761D462233CC</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="binary_hash" id="DBC7FA10-080C-5F53-53A4-120C23C795EC">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<generatorID>52A7800A-194F-FC4A-DD0F-AF5DFB34E8E3</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="TRACKv1_ID" id="44CF408F-2CCD-0ECC-EB2C-D80B3AAE8BF3">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementColumn>true</autoIncrementColumn>
+<identityColumn>true</identityColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<isSurrogateColumn>true</isSurrogateColumn>
+</Column>
+<Column name="TRACK_BINARY_TRACK_BINARY_ID" id="E31556C9-D45F-CA56-AB22-06EF5F5F4521">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="B5FBCDC9-3EE7-0AD3-989D-691A0BB5D491" referredColumn="C3BE094F-102F-87EF-EE0D-C925C3228C2B"/>
+</associations>
+</Column>
+<Column name="ALBUM_ALBUM_ID" id="77C64CB8-AF9A-BBCC-A602-A3F74A6530E7">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="F081D126-0E7A-DA8C-801C-3F2D97887176" name="TRACKv1_PK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<indexColumnUsage>
+<colUsage columnID="44CF408F-2CCD-0ECC-EB2C-D80B3AAE8BF3"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="B4CD4081-159F-E204-7509-A944177A61F7" name="TRACKv1__IDX">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:14:37 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<indexState>Unique Plain Index</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<relationGeneratorID>4E9481F6-8F9E-158F-0D63-9502A93D7122</relationGeneratorID>
+<indexColumnUsage>
+<colUsage columnID="E31556C9-D45F-CA56-AB22-06EF5F5F4521"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="E5A0307C-0165-51FF-8E11-724C135F200A" name="TRACK_TRACK_BINARY_FK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:15:49 UTC</createdTime>
+<generatorID>4E9481F6-8F9E-158F-0D63-9502A93D7122</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="E31556C9-D45F-CA56-AB22-06EF5F5F4521"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>
