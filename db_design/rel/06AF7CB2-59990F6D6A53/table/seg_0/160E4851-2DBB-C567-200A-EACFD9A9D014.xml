@@ -71,9 +71,6 @@
 <ownDataTypeParameters>,,</ownDataTypeParameters>
 <previousColumn>false</previousColumn>
 <autoIncrementCycle>false</autoIncrementCycle>
-<associations>
-<colAssociation fkAssociation="44FE3407-B0FA-66C1-FF2E-14084F7E8CDD" referredColumn="44CF408F-2CCD-0ECC-EB2C-D80B3AAE8BF3"/>
-</associations>
 </Column>
 </columns>
 <indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
@@ -105,17 +102,6 @@
 <indexState>Unique Plain Index</indexState>
 <isSurrogateKey>false</isSurrogateKey>
 <relationGeneratorID>4E9481F6-8F9E-158F-0D63-9502A93D7122</relationGeneratorID>
-<indexColumnUsage>
-<colUsage columnID="18980A29-1707-B754-D651-132B0581081F"/>
-</indexColumnUsage>
-</ind_PK_UK>
-<ind_PK_UK id="87977B4E-3B6C-9480-F383-BA8517E23FA1" name="TRACK_BINARY_TRACK_FK">
-<createdBy>marcin</createdBy>
-<createdTime>2021-04-01 21:15:49 UTC</createdTime>
-<generatorID>4E9481F6-8F9E-158F-0D63-9502A93D7122</generatorID>
-<ownerDesignName>db_design</ownerDesignName>
-<indexState>Foreign Key</indexState>
-<isSurrogateKey>false</isSurrogateKey>
 <indexColumnUsage>
 <colUsage columnID="18980A29-1707-B754-D651-132B0581081F"/>
 </indexColumnUsage>

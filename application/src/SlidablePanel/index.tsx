@@ -1,5 +1,6 @@
 import {createUseStyles} from "react-jss";
 import React from "react";
+import theme from "../Theme";
 
 interface SlidablePanelProps {
   children?: React.ReactNode
@@ -9,16 +10,18 @@ export default function SlidablePanel({children}: SlidablePanelProps) {
   const useStyles = createUseStyles({
     wrapper: {
       position: 'fixed',
-      bottom: 0,
+      bottom: '3rem',
       width: '100vw',
-      height: '7rem',
+      height: '4rem',
       boxSizing: 'border-box'
     },
     container: {
       color: 'white',
       userSelect: 'none',
       // background: 'radial-gradient(99.05% 99.05% at 49.87% 58.42%, #AF1170 0%, #383838 100%)',
-      background: 'radial-gradient(99.05% 99.05% at 49.87% 58.42%, #033e44 0%, #383838 100%)',
+      // background: 'radial-gradient(99.05% 99.05% at 49.87% 58.42%, #033e44 0%, #383838 100%)',
+      backgroundColor: "rgb(255, 204, 188, 0.6)",
+      backdropFilter: "blur(40px)",
       height: '100vh',
       width: '100%',
       borderRadius: '2.5rem 2.5rem 0 0',
@@ -29,6 +32,7 @@ export default function SlidablePanel({children}: SlidablePanelProps) {
       bottom: 0
     },
     handle: {
+      zIndex: 1,
       margin: '.5rem 0',
       width: '100%',
       display: 'flex',
@@ -36,7 +40,7 @@ export default function SlidablePanel({children}: SlidablePanelProps) {
       '& div': {
         width: '.5rem',
         height: '.5rem',
-        backgroundColor: 'white',
+        backgroundColor: 'black',
         margin: '.25rem',
         borderRadius: '.5rem',
         boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.25)'

@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {createFFmpeg} from "@ffmpeg/ffmpeg";
+import {convertMP3ToOpus, createWebM} from "../UploadMusic/prepareWebM";
 
 export default function Player({chunks}: {chunks: Array<ArrayBuffer>}) {
   const [file, setFile] = useState<ArrayBuffer>()
@@ -22,6 +23,12 @@ export default function Player({chunks}: {chunks: Array<ArrayBuffer>}) {
 
   return <>
     <audio
+      style={{
+        position: 'absolute',
+        marginTop: '.25rem',
+        height: '3.5rem',
+        width: 'calc(100% - 1rem)'
+      }}
       src={URL.createObjectURL(mediaSource)}
       controls
       onError={console.log}
@@ -36,37 +43,9 @@ export default function Player({chunks}: {chunks: Array<ArrayBuffer>}) {
         }
       }}
     />
-    <input
-      type="file"
-      onChange={(event) => {
-        const fileList = event.target.files;
-        console.log(fileList);
-        if (fileList) {
-          fileList[0].arrayBuffer().then(ab => {
-            setFile(ab)
-            convertMp3ToOpusAndCreateWebM(ab)
-          })
-        }
-      }}
-    />
   </>
 
 
-
-  async function convertMP3ToOpus(mp3: ArrayBuffer): Promise<Uint8Array> {
-    await ffmpeg.load()
-    ffmpeg.FS('writeFile', 'test.mp3', new Uint8Array(mp3))
-    await ffmpeg.run("-i", "test.mp3", "-c:a", "libopus", "out.opus")
-    console.log('CONVERT COMPLETED')
-    return ffmpeg.FS('readFile', 'out.opus')
-  }
-
-  async function createWebM(opus: Uint8Array): Promise<ArrayBuffer> {
-    ffmpeg.FS('writeFile', 'test.opus', opus)
-    await ffmpeg.run("-i", "test.opus", "-c:v", "libvpx", "-c:a", "libopus", "out.opus", "-f", "webm", "streamable.webm")
-    console.log('MUXING COMPLETED')
-    return ffmpeg.FS('readFile', 'streamable.webm').buffer
-  }
 
   async function convertMp3ToOpusAndCreateWebM(mp3: ArrayBuffer) {
     const opus = await convertMP3ToOpus(mp3)

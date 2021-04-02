@@ -5,6 +5,7 @@
   "dependencies": {
     "@ffmpeg/core": "^0.8.5",
     "@ffmpeg/ffmpeg": "^0.9.7",
+    "@material-ui/icons": "^4.11.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -13,6 +14,7 @@
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.0",
     "@types/uuid": "^8.3.0",
+    "dexie": "^3.0.3",
     "jsmediatags": "^3.8.1",
     "jss": "^10.5.1",
     "jss-preset-default": "^10.5.1",
@@ -20,7 +22,9 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-jss": "^10.5.1",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
+    "react-spinners": "^0.10.6",
     "typescript": "^4.1.2",
     "uuid": "^8.3.2",
     "web-vitals": "^1.0.1"
@@ -52,7 +56,8 @@
   "proxy": "http://localhost:8080",
   "devDependencies": {
     "@types/ffmpeg.js": "^3.1.1",
-    "@types/jsmediatags": "^3.9.2"
+    "@types/jsmediatags": "^3.9.2",
+    "@types/react-router-dom": "^5.1.7"
   },
   "browser": "dist/jsmediatags.js"
 }

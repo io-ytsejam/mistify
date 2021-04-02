@@ -77,6 +77,16 @@
 <autoIncrementCycle>false</autoIncrementCycle>
 <isSurrogateColumn>true</isSurrogateColumn>
 </Column>
+<Column name="social_media_link" id="3844382B-CC1B-A673-F88E-9732732D8ECE">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:22:54 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>A3A3C77D-0366-9768-FF89-1C25E56881C8</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
 </columns>
 <indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
 <ind_PK_UK id="A1464480-7F92-727F-2EB6-5EA6C43EB891" name="ARTIST_IDENTITY_PK">

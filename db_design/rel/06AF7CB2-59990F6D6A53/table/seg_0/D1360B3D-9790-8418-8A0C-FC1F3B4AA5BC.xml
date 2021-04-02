@@ -1,0 +1,89 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="D1360B3D-9790-8418-8A0C-FC1F3B4AA5BC" name="ALBUM">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<generatorID>D093ADDD-E899-4275-50DB-2F0BA3013728</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="name" id="ED8B44AD-71C7-B311-F0D8-1CB60D7F9027">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<generatorID>BFC79C85-DD6A-A2A9-C802-62E046A55E29</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="release_date" id="3419F4F9-14FA-67F1-21FD-DFAD90F856CF">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<generatorID>9E3F8B6A-B120-71BC-2B67-FC533133179E</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="type" id="6B9EA1F1-62BD-59CF-3440-078F6217A79F">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<generatorID>9264290C-0714-ADFA-3F0A-223C527A60AF</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="ALBUM_ID" id="9959E04C-9037-500C-3927-BBED935E480A">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementColumn>true</autoIncrementColumn>
+<identityColumn>true</identityColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<isSurrogateColumn>true</isSurrogateColumn>
+</Column>
+<Column name="ARTIST_IDENTITY_ARTIST_IDENTITY_ID" id="05946CC6-86A3-1C65-A52F-A8AEDD4FF694">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="E95D9C3B-73FD-E84B-2CBB-24215F6A3355" referredColumn="16CC8DB3-40B6-B884-3300-E57A17C59957"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="F1476AE3-D95C-5267-7BE8-CD1E0F65F4C8" name="ALBUM_PK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<ownerDesignName>db_design</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<indexColumnUsage>
+<colUsage columnID="9959E04C-9037-500C-3927-BBED935E480A"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="59670D63-AA4C-B1A1-3C58-AFFCA202F3FF" name="ALBUM_ARTIST_IDENTITY_FK">
+<createdBy>marcin</createdBy>
+<createdTime>2021-04-01 21:19:52 UTC</createdTime>
+<generatorID>4EE08591-8292-C713-2743-6F0EDB41E53B</generatorID>
+<ownerDesignName>db_design</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="05946CC6-86A3-1C65-A52F-A8AEDD4FF694"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

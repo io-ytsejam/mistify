@@ -1,5 +1,6 @@
 import React from "react";
 import {createUseStyles} from "react-jss";
+import theme from "../Theme";
 
 interface ButtonProps {
   variant?: 'first'|'second',
@@ -27,17 +28,18 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
 
   const useStyles = createUseStyles({
     button: {
-      background: '#262539',
-      color: "white",
-      borderRadius: '.25rem',
+      background: theme.colors.primary,
+      color: theme.colors.primaryText,
+      fontWeight: "bold",
+      borderRadius: '2rem',
       border: "none",
       padding: buttonSpacing,
       margin: buttonSpacing,
-      boxShadow: '0px 0px 5px #686868',
+      // boxShadow: '0px 0px 5px #686868',
       fontFamily: 'Montserrat',
       outline: "none",
       fontSize: buttonFontSize,
-      textShadow: '0 .25rem .25rem rgba(0, 0, 0, 0.25)',
+      // textShadow: '0 .25rem .25rem rgba(0, 0, 0, 0.25)',
       cursor: 'pointer',
       userSelect: 'none',
       '&:hover': {
@@ -49,7 +51,7 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
     },
     secondButton: {
       extend: 'button',
-      background: 'rgba(177, 74, 136, 0.28)',
+      backgroundColor: theme.colors.primaryLight,
       boxShadow: '0px 0px 4px rgba(0, 0, 0, 0.25)',
       borderRadius: 5
     }
