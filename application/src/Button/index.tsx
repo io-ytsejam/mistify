@@ -8,13 +8,13 @@ interface ButtonProps {
 }
 
 export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  let buttonSpacing = '1rem .5rem'
+  let buttonSpacing = '1rem .375rem'
   let buttonFontSize = 14
 
   switch (props.size) {
     case "s": {
-      buttonFontSize = 10
-      buttonSpacing = '.5rem .25rem'; break;
+      // buttonFontSize = 10
+      buttonSpacing = '.3125rem'; break;
     }
     case "m": {
       buttonFontSize = 12
@@ -34,8 +34,7 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
       borderRadius: '2rem',
       border: "none",
       padding: buttonSpacing,
-      margin: buttonSpacing,
-      // boxShadow: '0px 0px 5px #686868',
+      boxShadow: '0px 0px 5px #686868',
       fontFamily: 'Montserrat',
       outline: "none",
       fontSize: buttonFontSize,
@@ -51,9 +50,10 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
     },
     secondButton: {
       extend: 'button',
-      backgroundColor: theme.colors.primaryLight,
-      boxShadow: '0px 0px 4px rgba(0, 0, 0, 0.25)',
-      borderRadius: 5
+      backgroundColor: "transparent",
+      color: 'white',
+      border: `1px solid ${theme.colors.primaryLight}`,
+      boxShadow: '0px 0px 5px #686868'
     }
   })
 
@@ -64,6 +64,6 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
 
   return <button
     {...props}
-    className={buttonClass}
+    className={`${props.className} ${buttonClass}`}
   />
 }

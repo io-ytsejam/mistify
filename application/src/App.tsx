@@ -19,6 +19,7 @@ import BackupOutlinedIcon from '@material-ui/icons/BackupOutlined';
 import LibraryMusicOutlinedIcon from '@material-ui/icons/LibraryMusicOutlined';
 import WifiTetheringOutlinedIcon from '@material-ui/icons/WifiTetheringOutlined';
 import Library from "./Library";
+import Upload from "./UploadMusic/Upload";
 
 
 // 6f2dec85-9293-4b6a-8936-9a3d9cbdd69c
@@ -26,10 +27,17 @@ import Library from "./Library";
 function App() {
   const styles = {
     '@global': {
+      body: {
+        color: 'white',
+        overscrollBehavior: 'none'
+      },
+      a: {
+        color: 'white'
+      },
       '*': {
         margin: 0,
         fontFamily: 'Montserrat',
-        color: 'white'
+        boxSizing: 'border-box'
       }
     }
   }
@@ -99,7 +107,7 @@ function App() {
           <Library />
         </Route>
         <Route path='/upload'>
-          <UploadMusic />
+          <Upload />
         </Route>
       </Switch>
       <SlidablePanel>
