@@ -95,7 +95,9 @@ function App() {
       style={{
         backgroundColor: theme.colors.secondary,
         height: '100vh',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        overflowY: 'scroll',
+        paddingBottom: '5.5rem'
       }}
     >
 
@@ -114,19 +116,19 @@ function App() {
         {/*<Player chunks={new Array<ArrayBuffer>()}/>*/}
       </SlidablePanel>
       <div className={navbar}>
-        <Link to='/upload'>
+        <Link replace to='/upload'>
           <div className={navbarButton}>
             <BackupOutlinedIcon />
             <p>Upload</p>
           </div>
         </Link>
-        <Link to='/library'>
+        <Link replace to='/library'>
           <div className={navbarButton}>
             <LibraryMusicOutlinedIcon />
             <p>Library</p>
           </div>
         </Link>
-        <Link to='/network'>
+        <Link replace to='/network'>
           <div className={navbarButton}>
             <WifiTetheringOutlinedIcon />
             <p>Network</p>

@@ -3,7 +3,7 @@ import {createUseStyles} from "react-jss";
 import theme from "../Theme";
 
 interface ButtonProps {
-  variant?: 'first'|'second',
+  variant?: 'first'|'second'|'icon'|'secondIcon',
   size?: 's'|'m'|'l'
 }
 
@@ -52,18 +52,36 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
       extend: 'button',
       backgroundColor: "transparent",
       color: 'white',
-      border: `1px solid ${theme.colors.primaryLight}`,
+      border: `1px solid ${theme.colors.primary}`,
       boxShadow: '0px 0px 5px #686868'
+    },
+    icon: {
+      extend: 'button',
+      width: '1.5rem',
+      height: '1.5rem',
+      padding: 0
+    },
+    secondIcon: {
+      extend: 'icon',
+      backgroundColor: "transparent",
+      color: 'white'
     }
   })
 
-  const {button, secondButton} = useStyles()
+  const {button, secondButton, icon, secondIcon} = useStyles()
   const {variant} = props
+  let buttonClass
 
-  const buttonClass = variant === 'second' ? secondButton : button
+  if (variant === 'second')
+    buttonClass = secondButton
+  else if (variant === 'icon')
+    buttonClass = icon
+  else if (variant === 'secondIcon')
+    buttonClass = secondIcon
+  else buttonClass = button
 
   return <button
     {...props}
-    className={`${props.className} ${buttonClass}`}
+    className={buttonClass}
   />
 }

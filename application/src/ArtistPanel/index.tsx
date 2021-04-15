@@ -1,19 +1,30 @@
 import {createUseStyles, Styles} from "react-jss";
 import Button from "../Button";
+import React from "react";
 
-export default function ArtistPanel () {
+interface ArtistPanelProps {
+  name: string
+  genre: string
+  origin: string
+  started: number
+  ended?: number
+  picture?: string
+  children?: React.ReactNode
+}
+
+export default function ArtistPanel ({children, genre, name, origin, started, ended, picture}: ArtistPanelProps) {
   const {container, artistPic, artistDetails} = createUseStyles(styles)()
 
   return <div className={container}>
     <div className={artistPic}>
-      <img src="xd.jpg" alt="Artist"/>
+      <img src={picture} alt="Artist"/>
     </div>
     <div className={artistDetails}>
-      <p>Artist</p>
-      <p style={{fontSize: '.875rem'}}>Folk</p>
-      <p style={{fontSize: '.625rem'}}>Brazil</p>
-      <p style={{fontSize: '.625rem'}}>1990 - present</p>
-      <Button size='s' style={{position: "absolute", bottom: 0, right: 0}}>NEXT</Button>
+      <p>{name}</p>
+      <p style={{fontSize: '.875rem'}}>{genre}</p>
+      <p style={{fontSize: '.625rem'}}>{origin}</p>
+      <p style={{fontSize: '.625rem'}}>{`${started} - ${ended || 'present'}`}</p>
+      {children}
     </div>
   </div>
 }

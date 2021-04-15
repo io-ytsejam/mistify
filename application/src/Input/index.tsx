@@ -9,12 +9,10 @@ export default function Input(props: React.InputHTMLAttributes<HTMLInputElement>
       backgroundColor: theme.colors.secondaryLight,
       color: "white",
       borderRadius: '3px',
-      // border: "none",
       border: "2px solid #292929",
       boxShadow: '0 0 .5rem #272727',
       height: "2rem",
       padding: '.25rem',
-      // margin: '.5rem 1rem',
       outline: "none",
       '&:hover': {
         filter: 'brightness(1.2)'
@@ -25,7 +23,6 @@ export default function Input(props: React.InputHTMLAttributes<HTMLInputElement>
     }
   })()
 
-  return <input {...props}
-                className={input}
+  return <input {...props} className={input}
   />
 }

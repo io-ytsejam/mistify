@@ -1,5 +1,4 @@
 import {createFFmpeg, FFmpeg} from "@ffmpeg/ffmpeg";
-import {FileProcessing} from "../types";
 import {Tags} from "jsmediatags/types";
 import jsmediatags from "jsmediatags";
 
@@ -15,8 +14,9 @@ export async function convertMP3ToOpus(mp3: ArrayBuffer): Promise<Uint8Array> {
 }
 
 export async function createWebM(opus: Uint8Array): Promise<ArrayBuffer> {
+  const FFMPEG_ARGS = ["-i", "test.opus", "-c:v", "libvpx", "-c:a", "libopus", "out.opus", "-f", "webm", "streamable.webm"]
   ffmpeg.FS('writeFile', 'test.opus', opus)
-  await ffmpeg.run("-i", "test.opus", "-c:v", "libvpx", "-c:a", "libopus", "out.opus", "-f", "webm", "streamable.webm")
+  await ffmpeg.run(...FFMPEG_ARGS)
   console.log('MUXING COMPLETED')
   return ffmpeg.FS('readFile', 'streamable.webm').buffer
 }

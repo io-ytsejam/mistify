@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid';
 import Button from "../Button";
 import Player from "../Player";
 import queueProcessing, {convertMP3ToOpus, createWebM, readTags} from "./prepareWebM";
-import {FileProcessing, MusicGroup} from "../types";
 import TrackUpload from "./TrackUpload";
 import Input from "../Input";
 import Dexie from "dexie";
@@ -86,7 +85,9 @@ export default function UploadMusic() {
       processingInProgress: false,
       processingFailure: undefined,
       processingSuccessful: false,
-      musicGroup: null
+      musicGroup: null,
+      name: '',
+      duration: 0
     }
 
     setFilesProcessing((files: Array<FileProcessing>) => [...files, fileProcessing])
