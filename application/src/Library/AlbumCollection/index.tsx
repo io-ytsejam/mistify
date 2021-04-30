@@ -10,8 +10,9 @@ export default function AlbumCollection ({ albums, showAlbum }: AlbumCollectionP
   const { collection } = useStyles({ albums })
 
   return <div className={collection}>
-    {albums?.map(album =>
+    {albums?.map((album, i) =>
       <Album
+        key={i}
         album={album}
         onClick={showAlbum}
       />)}
@@ -21,7 +22,7 @@ export default function AlbumCollection ({ albums, showAlbum }: AlbumCollectionP
 const useStyles = createUseStyles({
   collection: {
     animation: '.2s ease-in',
-    animationName: '$container-enter',
+    // animationName: '$container-enter',
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(8rem, 1fr))',
     gridAutoRows: '1fr',

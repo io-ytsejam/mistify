@@ -1,5 +1,4 @@
 import {useEffect, useState} from "react";
-import {connectWithPeer, onConnect} from "./index";
 import {pcs, observeConnections, pingPeer} from "../RTC";
 
 export default function Connection () {
@@ -8,7 +7,7 @@ export default function Connection () {
   // Store peer IDs in state, so we can re-render on every change
   const [activeConnections, setActiveConnections] = useState<Array<string>>([])
 
-  useEffect(initialize, [id])
+  useEffect(initialize, [])
 
   return <div>
     <h1>You are: {id?.substr(0, 8)}</h1>
@@ -31,7 +30,7 @@ export default function Connection () {
   }
 
   function initialize() {
-    onConnect(onMembersUpdate)
+    handlePcsChange()
     observeConnections.addEventListener('change', handlePcsChange)
 
     return function cleanup () {
@@ -40,18 +39,6 @@ export default function Connection () {
 
     function handlePcsChange() {
       setActiveConnections(pcs.map(({ peerID }) => peerID))
-    }
-
-    function onMembersUpdate(peers: Array<string>) {
-      const updatedMembers = [...peers]
-
-      // Because user joining the network initialize connections with others,
-      // we call it only on first update.
-      if (pcs.length > 0) return
-
-      updatedMembers
-        .filter(peer => peer !== id) // We don't want to connect with ourselves
-        .forEach(connectWithPeer)
     }
   }
 }

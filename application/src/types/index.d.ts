@@ -70,3 +70,10 @@ type UploadContextType = {
   state: Upload
   setState: (state: Upload|((state: Upload) => Upload)) => void
 }
+
+interface PeerConnection {
+  pc: RTCPeerConnection
+  id: string
+  peerID: string,
+  dataChannel?: RTCDataChannel
+}

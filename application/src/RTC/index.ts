@@ -1,16 +1,16 @@
 import { v4 as uuid } from 'uuid';
 import {sendICECandidate} from "../Connection";
 
-interface PeerConnection {
-  pc: RTCPeerConnection
-  id: string
-  peerID: string,
-  dataChannel?: RTCDataChannel
-}
-
-export { pcs, observeConnections }
+export { pcs, observeConnections, ConnectionEvents }
 
 const observeConnections = new EventTarget()
+const ConnectionEvents = {
+  CHANGE: 'change',
+  DATA_CHANNEL_OPEN: 'dataChannelOpen',
+  DataChannel: {
+    LIBRARY: 'library'
+  }
+}
 const pcs: Array<PeerConnection> = []
 const iceCandidates: Array<{id: string, ice: RTCIceCandidate}> = []
 const peerConnectionConfig = {
@@ -24,11 +24,36 @@ const peerConnectionConfig = {
     }]
 }
 
+// For debugging
 // @ts-ignore
 window.pcs = pcs
 
+export function broadCastMessage(message: string) {
+  pcs.map(({dataChannel}) => dataChannel)
+    .filter(dataChannel => dataChannel?.readyState === 'open')
+    .forEach(dc => dc?.send(message))
+}
+
 function dispatchPcsChange() {
-  observeConnections.dispatchEvent(new Event('change'))
+  observeConnections.dispatchEvent(new Event(ConnectionEvents.CHANGE))
+}
+
+function dispatchDataChannelOpen() {
+  observeConnections.dispatchEvent(new Event(ConnectionEvents.DATA_CHANNEL_OPEN))
+}
+
+function dispatchDataChannelLibrary({key, data}: {key: string, data: string}) {
+  observeConnections.dispatchEvent(new CustomEvent(ConnectionEvents.DataChannel.LIBRARY, { detail: {key, data} }))
+}
+
+function onDataChannelMessage({data: message}: { data: string }) {
+  try {
+    const {key, data} = JSON.parse(message)
+    if (key === 'library')
+      dispatchDataChannelLibrary({key, data})
+  } catch (e) {
+    console.warn('Invalid message from data channel')
+  }
 }
 
 export function pingPeer(peerID: string) {
@@ -38,6 +63,11 @@ export function pingPeer(peerID: string) {
   const message = JSON.stringify({key: 'PING', value: ''})
 
   connection.dataChannel?.send(message)
+}
+
+function addPeerConnection(pc: PeerConnection) {
+  pcs.push(pc)
+  dispatchPcsChange()
 }
 
 function getConnectionEndHandler(connectionID: string, pc: RTCPeerConnection): ((this:RTCPeerConnection, ev: Event) => any) {
@@ -50,16 +80,15 @@ function getConnectionEndHandler(connectionID: string, pc: RTCPeerConnection): (
 export async function createOffer(): Promise<{id: string, offer: RTCSessionDescription}> {
   const connectionID = uuid()
   const pc = new RTCPeerConnection(peerConnectionConfig)
-  const dataChannel = pc.createDataChannel('main', {id: 10, negotiated: true})
+  const dataChannel = pc.createDataChannel('main', {id: 1, negotiated: true})
 
   pc.onconnectionstatechange = getConnectionEndHandler(connectionID, pc)
-  pc.onicegatheringstatechange = console.log
+  // pc.onicegatheringstatechange = console.log
   pc.onicecandidate = onICECandidate
-  dataChannel.onmessage = console.log
+  dataChannel.onmessage = onDataChannelMessage
+  dataChannel.onopen = dispatchDataChannelOpen
 
-  console.log(pc, dataChannel)
-  pcs.push({id: connectionID, pc, peerID: '', dataChannel})
-  dispatchPcsChange()
+  addPeerConnection({id: connectionID, pc, peerID: '', dataChannel})
 
   const offer = await pc.createOffer()
   await pc.setLocalDescription(offer)
@@ -67,7 +96,7 @@ export async function createOffer(): Promise<{id: string, offer: RTCSessionDescr
   return {id: connectionID, offer: pc.localDescription}
 
   function onICECandidate ({candidate}: RTCPeerConnectionIceEvent) {
-    console.log(candidate)
+    // console.log(candidate)
     if (candidate) {
       iceCandidates.push({id: connectionID, ice: candidate})
     }
@@ -88,17 +117,15 @@ export async function createAnswer(connectionID: string, offerer: string, offer:
   }
 
   const pc = new RTCPeerConnection(peerConnectionConfig)
-  const dataChannel = pc.createDataChannel('main', {id: 10, negotiated: true})
-  dataChannel.onmessage = console.log
+  const dataChannel = pc.createDataChannel('main', {id: 1, negotiated: true})
+  dataChannel.onmessage = onDataChannelMessage
+  dataChannel.onopen = dispatchDataChannelOpen
 
   pc.onconnectionstatechange = getConnectionEndHandler(connectionID, pc)
-  pc.onicegatheringstatechange = console.log
+  // pc.onicegatheringstatechange = console.log
   pc.onicecandidate = onIceCandidate
 
-  console.log({pc})
-
-  pcs.push({id: connectionID, pc, peerID: offerer, dataChannel})
-  dispatchPcsChange()
+  addPeerConnection({id: connectionID, pc, peerID: offerer, dataChannel})
   await pc.setRemoteDescription(offer)
   const answer = await pc.createAnswer()
   await pc.setLocalDescription(answer)

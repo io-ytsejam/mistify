@@ -31,8 +31,9 @@ export default function ChooseArtist() {
     <div>
       {!artists?.length ?
         <p className={noArtistsText}>No artists yet. Create new One!</p> : null}
-      {artists?.map(artist =>
+      {artists?.map((artist, i) =>
         <ArtistPanel
+          key={i}
           name={artist.name}
           genre={artist.genre}
           origin={artist.origin}

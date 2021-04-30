@@ -6,6 +6,7 @@ import Album from "./Album";
 import {Route, Switch, useHistory} from "react-router-dom";
 import AlbumView from "./AlbumView";
 import AlbumCollection from "./AlbumCollection";
+import {broadCastMessage} from "../RTC";
 
 export default function Library() {
   const history = useHistory()
@@ -36,13 +37,17 @@ export default function Library() {
   }
 
   function queryDB() {
-    db.albums.toArray().then(albums => {
+    db.albums.toArray().then(handleDBResult)
+
+    function handleDBResult(albums: Array<IAlbum>) {
       setAlbums(albums.map(album => ({
         ...album,
         type: album.type as AlbumType,
         releaseDate: new Date(album.releaseDate)
       })))
-    })
+
+      console.log(JSON.stringify(albums))
+    }
   }
 }
 

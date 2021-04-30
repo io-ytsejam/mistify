@@ -1,12 +1,43 @@
 /** Glue code between RTC logic and WebSocket signaling */
 
-import { acceptAnswer, addICE, createAnswer, createOffer } from "../RTC";
+import {
+  acceptAnswer,
+  addICE,
+  broadCastMessage,
+  ConnectionEvents,
+  createAnswer,
+  createOffer,
+  observeConnections,
+  pcs
+} from "../RTC";
+import MainDB, {IAlbum} from "../MainDB";
 
+const db = new MainDB()
 const { hostname } = window.location
 const webSocket = new WebSocket(`ws://${hostname}:8080`);
+const id = localStorage.getItem('id')
 
-// @ts-ignore
-window.webSocket = webSocket
+onConnect(onMembersUpdate)
+
+function onMembersUpdate(peers: Array<string>) {
+  // Because user joining the network initialize connections with others,
+  // we call it only on first update.
+  if (pcs.length > 0) return
+
+  connectWithPeers([...peers])
+  addListeners()
+}
+
+function connectWithPeers(peers: Array<string>) {
+  peers
+    .filter(peer => peer !== id) // We don't want to connect with ourselves
+    .forEach(connectWithPeer)
+}
+
+function addListeners() {
+  observeConnections.addEventListener(ConnectionEvents.DATA_CHANNEL_OPEN, propagateLibrary)
+  observeConnections.addEventListener(ConnectionEvents.DataChannel.LIBRARY, (({detail}: CustomEvent) => console.log(detail)) as EventListener)
+}
 
 /** Hook-up all logic with WebSocket */
 export function onConnect(onMembersUpdate: Function) {
@@ -40,7 +71,7 @@ function readServiceMessage(message: string, cb: Function) {
 function onICE(message: string) {
   const {respondTo: peerID, ice} = JSON.parse(message)
 
-  console.log('RECEIVED: ', {ice})
+  // console.log('RECEIVED: ', {ice})
 
   addICE(peerID, ice)
 }
@@ -95,3 +126,15 @@ export async function connectWithPeer(id: string) {
   sendMessage("connectWithPeer", JSON.stringify({id, offer, respondTo}))
 }
 
+function propagateLibrary() {
+  db.albums.toArray().then(handleDBResult)
+
+  function handleDBResult(albums: Array<IAlbum>) {
+    const message = JSON.stringify({
+      key: 'library',
+      data: albums
+    })
+
+    broadCastMessage(message)
+  }
+}
