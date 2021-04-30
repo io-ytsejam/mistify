@@ -2,14 +2,16 @@ type FileProcessing = {
   name: string
   duration: number
   mp3File: ArrayBuffer|null
+  webMFile: ArrayBuffer|null
+  hash: string
 
   processingInProgress: boolean
   processingSuccessful: boolean
   processingFailure: Error|undefined
-  musicGroup: MusicGroup|null
 }
 
 type Artist = {
+  id: string
   name: string
   genre: string
   origin: string
@@ -19,17 +21,20 @@ type Artist = {
   link?: URL
 }
 
+type AlbumType = 'lp'|'ep'|'single'
+
 type Album = {
   name: string
-  type: 'lp'|'ep'|'single'
+  type: AlbumType
   releaseDate: Date
-  picture?: ArrayBuffer
+  picture?: ArrayBuffer,
+  tracks?: Array<Track>
 }
 
 type Track = {
   binary?: ArrayBuffer
   name: string
-  duration: number
+  length: number
 }
 
 type Upload = {

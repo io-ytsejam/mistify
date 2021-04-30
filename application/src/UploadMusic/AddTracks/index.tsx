@@ -42,9 +42,10 @@ export default function AddTracks () {
       processingInProgress: false,
       processingFailure: undefined,
       processingSuccessful: false,
-      musicGroup: null,
       name: '',
-      duration: 0
+      duration: 0,
+      webMFile: null,
+      hash: ''
     }
 
     setUploadState({

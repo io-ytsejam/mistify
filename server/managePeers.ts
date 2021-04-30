@@ -20,8 +20,22 @@ export function onJoin(peer: Peer, answer: sendBack) {
   // answer(JSON.stringify({key: 'networkMembers', value: peers.map(({id}) => id)}))
 }
 
-export function onConnectWithPeer(peerIDToConnectWith: string, answer: sendBack) {
-  sendMessageToPeer(peerIDToConnectWith, formatMessage('connectWithPeer', "Some want to connect with you"))
+export function onConnectWithPeer(message: string, answer: sendBack) {
+  const {id: receiverID} = JSON.parse(message)
+  sendMessageToPeer(receiverID, JSON.stringify({ key: 'connectWithPeer', value: message}))
+}
+
+export function onIce(message: string) {
+  const {value} = JSON.parse(message)
+  const { id: receiverID, ice, respondTo } = JSON.parse(value)
+  const messageToSend = JSON.stringify({
+    key: 'ice',
+    value: JSON.stringify({
+      ice,
+      respondTo
+    })
+  })
+  sendMessageToPeer(receiverID, messageToSend)
 }
 
 function updatePeerList(peer: Peer|undefined = undefined) {

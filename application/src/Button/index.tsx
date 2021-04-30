@@ -82,6 +82,6 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
 
   return <button
     {...props}
-    className={buttonClass}
+    className={buttonClass + ' ' + props.className}
   />
 }

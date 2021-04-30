@@ -1,35 +1,57 @@
 import {useEffect, useState} from "react";
 import {connectWithPeer, onConnect} from "./index";
-import Button from "../Button";
+import {pcs, observeConnections, pingPeer} from "../RTC";
 
 export default function Connection () {
-  const [peers, setPeers] = useState<Array<string>>([])
+  const id = localStorage.getItem('id')
 
-  useEffect(() => {
-    onConnect(onMembersUpdate)
-  }, [])
+  // Store peer IDs in state, so we can re-render on every change
+  const [activeConnections, setActiveConnections] = useState<Array<string>>([])
 
-  function onMembersUpdate(peers: Array<string>) {
-    setPeers([...peers])
-  }
-
-  const id = sessionStorage.getItem('id')
+  useEffect(initialize, [id])
 
   return <div>
+    <h1>You are: {id?.substr(0, 8)}</h1>
     <p>Connected peers:</p>
 
-    <ul style={{fontSize: '.75rem'}}>
-      {peers.map(peer => <div key={peer}>
-        {
-          id !== peer && <Button
-            size='s'
-            onClick={() => {
-              connectWithPeer(peer)
-            }}
-          >Connect</Button>
-        }
-        {peer}
-      </div>)}
-    </ul>
+    {activeConnections.map((peerID, i) => <div style={{ display: 'flex' }} key={i}>
+      {id === peerID && '(you) '}
+      <p
+        onClick={() => pingPeer(peerID)}
+        style={{
+          color: isPeerConnected(peerID) ? 'green' : ''
+      }}>
+        {peerID?.substr(0, 8)}
+      </p>
+    </div>)}
   </div>
+
+  function isPeerConnected(peer: string): boolean {
+    return pcs.some(({ peerID }) => peerID === peer && peerID !== id)
+  }
+
+  function initialize() {
+    onConnect(onMembersUpdate)
+    observeConnections.addEventListener('change', handlePcsChange)
+
+    return function cleanup () {
+      observeConnections.removeEventListener('change', handlePcsChange)
+    }
+
+    function handlePcsChange() {
+      setActiveConnections(pcs.map(({ peerID }) => peerID))
+    }
+
+    function onMembersUpdate(peers: Array<string>) {
+      const updatedMembers = [...peers]
+
+      // Because user joining the network initialize connections with others,
+      // we call it only on first update.
+      if (pcs.length > 0) return
+
+      updatedMembers
+        .filter(peer => peer !== id) // We don't want to connect with ourselves
+        .forEach(connectWithPeer)
+    }
+  }
 }

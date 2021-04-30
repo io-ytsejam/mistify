@@ -29,9 +29,10 @@ export default function TrackUpload({index, setFileProcessing, fileProcessing}: 
         processingInProgress: false,
         processingSuccessful: false,
         processingFailure: undefined,
-        musicGroup: null,
         name,
-        duration: 0
+        duration: 0,
+        hash: '',
+        webMFile: null
       }
 
       setLoaded(true)

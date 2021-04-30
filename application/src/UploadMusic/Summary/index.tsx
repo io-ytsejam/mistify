@@ -64,8 +64,26 @@ export default function Summary () {
         {filesProcessing?.map(({name}) => <li>{name}</li>)}
       </ol>
     </div>
-    <div><Button style={{width: '100%'}} size='s'>CONFIRM AND START UPLOADING</Button></div>
+    <div>
+      <Button
+        style={{width: '100%'}}
+        size='s'
+        onClick={startUploading}
+      >
+        CONFIRM AND START UPLOADING
+      </Button>
+    </div>
   </div>
+
+  function startUploading() {
+    setUploadState(uploadState => ({
+      ...uploadState,
+      filesProcessing: uploadState.filesProcessing?.map(fileProcessing => ({
+        ...fileProcessing,
+        processingInProgress: true
+      }))
+    }))
+  }
 }
 
 const useStyles = createUseStyles({

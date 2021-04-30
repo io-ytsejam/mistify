@@ -1,33 +1,60 @@
 import Dexie from "dexie";
 
 export default class MainDB extends Dexie {
-  library: Dexie.Table<IMusicGroup, string>
+  artists: Dexie.Table<IArtist, string>
+  albums: Dexie.Table<IAlbum, string>
   tracks: Dexie.Table<ITracks, string>
+  binaryTracks: Dexie.Table<ITrackBinary, string>
 
   constructor () {
     super("MainDB");
     this.version(2).stores({
-      library: "[owner+artist+groupName], id, groupType, tracks, owner",
-      tracks: "&id"
+      artists: "[userToken+name]",
+      albums: "&id",
+      tracks: "&hash",
+      binaryTracks: "&hash"
     });
 
-    this.library = this.table("library");
+    this.artists = this.table("artists");
+    this.albums = this.table("albums");
     this.tracks = this.table("tracks")
+    this.binaryTracks = this.table("binaryTracks");
   }
 }
 
-interface IMusicGroup {
+export interface IArtist {
   id?: string
-  owner: string
-  artist: string
-  groupType: string
-  groupName: string
-  tracks: Array<string>
+  name: string
+  genre: string
+  started: number
+  ended?: number
+  origin: string
+  userToken: string
+  link?: string
+  picture?: string
+  albums: Array<IAlbum>
 }
 
-interface ITracks {
+export interface IAlbum {
   id?: string
-  webM: ArrayBuffer
+  name: string
+  type: string
+  releaseDate: string
+  artistID: string
+  tracks: Array<ITracks>
 }
 
-export type {IMusicGroup}
+export interface ITracks {
+  id?: string
+  name: string
+  albumID: string
+  length: number
+  hash: string
+}
+
+// We don't need id key if we have hash. Also PK should be [hash]
+export interface ITrackBinary {
+  id?: string
+  hash: string
+  binary: ArrayBuffer
+}

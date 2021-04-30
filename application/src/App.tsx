@@ -20,72 +20,20 @@ import LibraryMusicOutlinedIcon from '@material-ui/icons/LibraryMusicOutlined';
 import WifiTetheringOutlinedIcon from '@material-ui/icons/WifiTetheringOutlined';
 import Library from "./Library";
 import Upload from "./UploadMusic/Upload";
+import {v4 as uuid} from "uuid";
 
 
-// 6f2dec85-9293-4b6a-8936-9a3d9cbdd69c
+export default function App() {
+  useEffect(function () {
+    const peerID = localStorage.getItem('id')
+    if (!peerID) {
+      alert('Peer ID not found, generating new one...')
 
-function App() {
-  const styles = {
-    '@global': {
-      body: {
-        color: 'white',
-        overscrollBehavior: 'none'
-      },
-      a: {
-        color: 'white'
-      },
-      '*': {
-        margin: 0,
-        fontFamily: 'Montserrat',
-        boxSizing: 'border-box'
-      }
+      localStorage.setItem('id', uuid())
     }
-  }
+  }, [])
 
-  const options = {
-    fontSize: 'rem',
-    borderRadius: 'rem',
-    width: 'rem',
-    height: 'rem',
-    padding: 'rem',
-    margin: 'rem'
-  }
-
-  const {navbar, navbarButton} = createUseStyles({
-    navbar: {
-      width: '100%',
-      height: '3rem',
-      position: 'fixed',
-      bottom: '0',
-      backgroundColor: theme.colors.secondaryLight,
-      borderTop: '1px solid white',
-      display: 'flex',
-      justifyContent: 'space-around',
-      '& a': {
-        textDecoration: "none"
-      },
-    },
-    navbarButton: {
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: 'fit-content',
-      height: '100%',
-      cursor: 'pointer',
-      userSelect: 'none',
-      '& p': {
-        fontSize: '.75rem'
-      },
-      transition: 'filter .4s ease',
-      '&:hover': {
-        filter: 'brightness(.5)'
-      },
-      '&:active': {
-        filter: 'brightness(.8)'
-      }
-    }
-  })()
+  const {navbar, navbarButton} = useStyles()
 
   jss.createStyleSheet(styles).attach()
   jss.use(defaultUnit(options))
@@ -139,4 +87,64 @@ function App() {
   </Router>
 }
 
-export default App;
+const styles = {
+  '@global': {
+    body: {
+      color: 'white',
+      overscrollBehavior: 'none'
+    },
+    a: {
+      color: 'white'
+    },
+    '*': {
+      margin: 0,
+      fontFamily: 'Montserrat',
+      boxSizing: 'border-box'
+    }
+  }
+}
+
+const options = {
+  fontSize: 'rem',
+  borderRadius: 'rem',
+  width: 'rem',
+  height: 'rem',
+  padding: 'rem',
+  margin: 'rem'
+}
+
+const useStyles = createUseStyles({
+  navbar: {
+    width: '100%',
+    height: '3rem',
+    position: 'fixed',
+    bottom: '0',
+    backgroundColor: theme.colors.secondaryLight,
+    borderTop: '1px solid white',
+    display: 'flex',
+    justifyContent: 'space-around',
+    '& a': {
+      textDecoration: "none"
+    },
+  },
+  navbarButton: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 'fit-content',
+    height: '100%',
+    cursor: 'pointer',
+    userSelect: 'none',
+    '& p': {
+      fontSize: '.75rem'
+    },
+    transition: 'filter .4s ease',
+    '&:hover': {
+      filter: 'brightness(.5)'
+    },
+    '&:active': {
+      filter: 'brightness(.8)'
+    }
+  }
+})

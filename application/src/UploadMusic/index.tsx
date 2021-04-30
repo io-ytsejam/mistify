@@ -6,7 +6,7 @@ import queueProcessing, {convertMP3ToOpus, createWebM, readTags} from "./prepare
 import TrackUpload from "./TrackUpload";
 import Input from "../Input";
 import Dexie from "dexie";
-import MainDB, {IMusicGroup} from "../MainDB";
+import MainDB from "../MainDB";
 
 export default function UploadMusic() {
   const [filesProcessing, setFilesProcessing] = useState<Array<FileProcessing>>([])
@@ -20,11 +20,11 @@ export default function UploadMusic() {
     if (!filesProcessing.length) return;
     if (filesProcessing.some(({processingSuccessful}) => !processingSuccessful)) return
 
-    const musicGroups = filesProcessing
+    /*const musicGroups = filesProcessing
       .flatMap(({musicGroup}) =>
-        musicGroup === null ? [] : [musicGroup])
+        musicGroup === null ? [] : [musicGroup])*/
 
-    const reducedMusicGroupWithTracks: MusicGroup = {
+    /*const reducedMusicGroupWithTracks: MusicGroup = {
       ...musicGroups[0],
       tracks: musicGroups.flatMap(({tracks}) => tracks)
     }
@@ -36,21 +36,21 @@ export default function UploadMusic() {
     const webMsWithHashes = filesProcessing
       .filter(({musicGroup}) => musicGroup !== null)
       .flatMap(({musicGroup}) => (musicGroup as MusicGroup).tracks)
-      .map(({hash: id, webM}) => ({id, webM}))
+      .map(({hash: id, webM}) => ({id, webM}))*/
 
 
-    storeLibrary(reducedMusicGroupWithTracks).then(console.log)
-    storeTracks(webMsWithHashes).then(console.log)
+    // storeLibrary(reducedMusicGroupWithTracks).then(console.log)
+    // storeTracks(webMsWithHashes).then(console.log)
 
 
   }, [filesProcessing])
 
-  async function storeTracks(tracks: Array<{ id: string, webM: ArrayBuffer }>) {
-    const db = new MainDB()
-    await Promise.all(tracks.map(async track => await db.tracks.add(track)))
-  }
+  // async function storeTracks(tracks: Array<{ id: string, webM: ArrayBuffer }>) {
+  //   const db = new MainDB()
+  //   await Promise.all(tracks.map(async track => await db.tracks.add(track)))
+  // }
 
-  async function storeLibrary(library: MusicGroup) {
+  /*async function storeLibrary(library: MusicGroup) {
     const data = {
       ...library,
       tracks: library.tracks.map(({hash}) => hash)
@@ -58,7 +58,7 @@ export default function UploadMusic() {
 
     const db = new MainDB()
     await db.library.add(data)
-  }
+  }*/
 
   function readMusicGroupTags() {
     if (!filesProcessing.length) return
@@ -79,7 +79,7 @@ export default function UploadMusic() {
     }
   }
 
-  function addEmptyFileProcessing() {
+  /*function addEmptyFileProcessing() {
     const fileProcessing: FileProcessing = {
       mp3File: null,
       processingInProgress: false,
@@ -88,42 +88,14 @@ export default function UploadMusic() {
       musicGroup: null,
       name: '',
       duration: 0
-    }
+    }*/
 
-    setFilesProcessing((files: Array<FileProcessing>) => [...files, fileProcessing])
+    // setFilesProcessing((files: Array<FileProcessing>) => [...files, fileProcessing])
   }
+  //
+  // return null
 
-  return <div style={{display: 'flex', flexDirection: 'column', overflowY: 'scroll'}}>
-    <Input
-      value={artistName}
-      onChange={({target}) => setArtistName(target.value)}
-      placeholder='Artist'
-    />
-    <Input
-      value={groupName}
-      onChange={({target}) => setGroupName(target.value)}
-      placeholder='Album'
-    />
-
-    {filesProcessing.map((fileProcessing, index) => (
-      <TrackUpload
-        key={index}
-        index={index}
-        fileProcessing={fileProcessing}
-        setFileProcessing={prepareReplaceFileProcessing(index)}
-      />
-    ))}
-    <Button
-      size='m'
-      onClick={addEmptyFileProcessing}
-    >Add track</Button>
-    {filesProcessing ? <Button
-      onClick={startProcessing}
-      size={'m'}
-    >ACCEPT</Button> : null}
-  </div>
-
-  async function startProcessing() {
+  /*async function startProcessing() {
     setFilesProcessing(filesProcessing =>
       filesProcessing.map(fp => ({...fp, processingInProgress: true}))
     )
@@ -155,9 +127,9 @@ export default function UploadMusic() {
           }
         })
       )
-    }
+    }*/
 
-    function handleFailure(fileProcessing: FileProcessing, processingFailure: Error) {
+ /*   function handleFailure(fileProcessing: FileProcessing, processingFailure: Error) {
       const {mp3File} = fileProcessing
       setFilesProcessing(filesProcessing => (
         filesProcessing.map(fp => fp.mp3File !== mp3File ? fp :
@@ -165,7 +137,7 @@ export default function UploadMusic() {
       ))
     }
   }
-}
+}*/
 
 function repeatNTimes (arr: Array<any>): Array<any> {
   return Array(arr.length).fill(0).map((v, _) => v)
