@@ -1,12 +1,13 @@
 import {createUseStyles, Styles} from "react-jss";
 import Button from "../Button";
-import MainDB, {IAlbum} from "../MainDB";
+import MainDB, {IAlbum, IArtist} from "../MainDB";
 import {useEffect, useState} from "react";
 import Album from "./Album";
 import {Route, Switch, useHistory} from "react-router-dom";
 import AlbumView from "./AlbumView";
 import AlbumCollection from "./AlbumCollection";
 import {broadCastMessage} from "../RTC";
+import {AppEvents, observeApp} from "../Observe";
 
 export default function Library() {
   const history = useHistory()
@@ -15,7 +16,7 @@ export default function Library() {
   const db = new MainDB()
   const { tabs, container } = useStyles({ hackGrid: albums?.length })
 
-  useEffect(queryDB, [])
+  useEffect(initialize, [])
 
   return <div className={container}>
     <Switch>
@@ -31,23 +32,38 @@ export default function Library() {
     </Switch>
   </div>
 
+  function initialize () {
+    queryDB()
+    observeApp.addEventListener(AppEvents.DB_CHANGE, queryDB)
+
+    return cleanup
+
+    function cleanup() {
+      observeApp.removeEventListener(AppEvents.DB_CHANGE, queryDB)
+    }
+  }
+
+  function queryDB() {
+    db.artists.toArray().then(onFulfilled)
+
+    function onFulfilled(library: Array<IArtist>) {
+      if (!library) return
+
+      setAlbums(library.flatMap(artist => artist.albums.map(album => ({
+        artist,
+        ...album,
+        releaseDate: parseDate(album.releaseDate)
+      } as Album))))
+    }
+  }
+
   function showAlbum(album: Album) {
     setViewed(album)
     history.push('/library/view-album')
   }
 
-  function queryDB() {
-    db.albums.toArray().then(handleDBResult)
-
-    function handleDBResult(albums: Array<IAlbum>) {
-      setAlbums(albums.map(album => ({
-        ...album,
-        type: album.type as AlbumType,
-        releaseDate: new Date(album.releaseDate)
-      })))
-
-      console.log(JSON.stringify(albums))
-    }
+  function parseDate(date: string): Date {
+    return new Date(Date.parse(date.split('.').reverse().join('-')))
   }
 }
 

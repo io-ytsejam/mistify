@@ -1,9 +1,11 @@
 import TopBar from "../../TopBar";
-import React from "react";
+import React, {useContext} from "react";
 import Button from "../../Button";
 import {useHistory} from "react-router-dom";
 import {createUseStyles} from "react-jss";
 import theme from "../../Theme";
+import {requestTrackStream} from "../../RTC";
+import {PlayerContext} from "../../App";
 
 interface AlbumViewProps {
   album: Album
@@ -11,12 +13,14 @@ interface AlbumViewProps {
 
 export default function AlbumView ({ album }: AlbumViewProps) {
   const history = useHistory()
-  const { name, tracks } = album
+  const { name, tracks, artist } = album
+  const { name: artistName, owner } = artist || {}
   const { viewHeader, container } = useStyles()
+  const { setState: setPlayerState } = useContext(PlayerContext) as PlayerContextType
 
   return <div className={container}>
     <TopBar
-      title={name}
+      title={artistName || ''}
       buttons={ <Button
         size='s'
         variant='second'
@@ -25,9 +29,19 @@ export default function AlbumView ({ album }: AlbumViewProps) {
       >Library</Button> }
     />
     <div>
-      <p className={viewHeader}>track list</p>
+      <p className={viewHeader}>{name}</p>
       <ol>
-        {tracks?.map(({ name }) => <li>{name}</li>)}
+        {tracks?.map(({ name, hash: trackHash, broadcasters: userTokens }, i) =>
+            <li
+              onClick={async () => {
+                if (!owner) return
+                setPlayerState({URL: await requestTrackStream({ trackHash, userTokens })})
+              }}
+              key={i}
+            >
+              {name}
+            </li>
+        )}
       </ol>
     </div>
   </div>

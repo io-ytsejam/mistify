@@ -61,7 +61,7 @@ export default function Summary () {
     <div>
       <h3>Track list</h3>
       <ol>
-        {filesProcessing?.map(({name}) => <li>{name}</li>)}
+        {filesProcessing?.map(({name}, i) => <li key={i}>{name}</li>)}
       </ol>
     </div>
     <div>

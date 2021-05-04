@@ -1,16 +1,13 @@
 import { v4 as uuid } from 'uuid';
 import {sendICECandidate} from "../Connection";
+import MainDB, {IAlbum, IArtist, ITrackBinary} from "../MainDB";
+import {addTrackBroadcaster, propagateLibrary} from "../LibraryController";
+import {AppEvents, dispatchDataChannelLibrary, dispatchDataChannelOpen, dispatchPcsChange} from "../Observe";
 
-export { pcs, observeConnections, ConnectionEvents }
+export { pcs }
 
-const observeConnections = new EventTarget()
-const ConnectionEvents = {
-  CHANGE: 'change',
-  DATA_CHANNEL_OPEN: 'dataChannelOpen',
-  DataChannel: {
-    LIBRARY: 'library'
-  }
-}
+const db = new MainDB()
+
 const pcs: Array<PeerConnection> = []
 const iceCandidates: Array<{id: string, ice: RTCIceCandidate}> = []
 const peerConnectionConfig = {
@@ -23,6 +20,7 @@ const peerConnectionConfig = {
       urls: 'stun:stun.l.google.com:19302'
     }]
 }
+const userID = localStorage.getItem('id') || ''
 
 // For debugging
 // @ts-ignore
@@ -34,16 +32,108 @@ export function broadCastMessage(message: string) {
     .forEach(dc => dc?.send(message))
 }
 
-function dispatchPcsChange() {
-  observeConnections.dispatchEvent(new Event(ConnectionEvents.CHANGE))
-}
+/** Kind of a hack, kind of a not. We write our track request in channel label.
+ * When another peer will receive onDataChannel event, them will try to parse
+ * data channel's label, and if it happen to be a stream request, them will
+ * handle it. */
+export async function requestTrackStream({trackHash, userTokens}: {trackHash: string, userTokens: Array<string>}): Promise<string> {
+  const mediaSource = new MediaSource()
 
-function dispatchDataChannelOpen() {
-  observeConnections.dispatchEvent(new Event(ConnectionEvents.DATA_CHANNEL_OPEN))
-}
+  // Check is track is on host. If not, stream from someone.
+  getSourceBuffer()
+    .then(initStream)
+    .catch(console.error)
 
-function dispatchDataChannelLibrary({key, data}: {key: string, data: string}) {
-  observeConnections.dispatchEvent(new CustomEvent(ConnectionEvents.DataChannel.LIBRARY, { detail: {key, data} }))
+  return URL.createObjectURL(mediaSource)
+
+  async function initStream(buffer: SourceBuffer) {
+    try {
+      await initLocalStream(buffer)
+      console.info('Track found locally')
+    } catch ({ message }) {
+      await initRemoteStream(buffer)
+      console.warn(message)
+      console.info('Track found remotely')
+    }
+  }
+
+  async function initLocalStream(buffer: SourceBuffer) {
+    return db.binaryTracks
+      .filter(({ hash }) => hash === trackHash)
+      .last()
+      .then(onFulfilled)
+
+    function onFulfilled(track: ITrackBinary | undefined) {
+      if (track) {
+        buffer.appendBuffer(track.binary)
+        assurePeerIsBroadcaster()
+      } else throw new Error('Track not found')
+    }
+
+    function assurePeerIsBroadcaster() {
+      db.artists.filter(({ albums }) =>
+        albums.some(({ tracks }) =>
+          tracks.some(({ broadcasters }) =>
+            broadcasters.some(broadcaster =>
+              broadcaster === localStorage.getItem('id')
+            )
+          )
+        )
+      ).first()
+        .then(artist => {
+          if (!artist) addTrackBroadcaster(trackHash, userID)
+      })
+    }
+  }
+
+  function initRemoteStream(buffer: SourceBuffer) {
+    const { pc, peerID } = pcs.find(({peerID, pc}) => userTokens.some(userToken => userToken === peerID && pc.connectionState === 'connected')) || {}
+    if (!pc) throw new Error('No peer streaming this track is reachable')
+    console.debug("Streaming from", peerID)
+    const trackParts: Array<ArrayBuffer> = []
+    const dataChannel = pc.createDataChannel(getLabel())
+    dataChannel.onmessage = onMessage
+
+    function onMessage({data}: { data: ArrayBuffer|string }) {
+      if (typeof data == 'string') {
+        if (data !== 'END') return
+        handleStreamEnd(trackParts)
+        dataChannel.close()
+      } else {
+        trackParts.push(data)
+        buffer.appendBuffer(data)
+      }
+    }
+  }
+
+  async function handleStreamEnd(trackParts: Array<ArrayBuffer>) {
+    const blob = new Blob(trackParts)
+
+    db.binaryTracks
+      .add({ binary: await blob.arrayBuffer(), hash: trackHash })
+      .then(() => addTrackBroadcaster(trackHash, userID))
+      .catch(console.error)
+  }
+
+  function getLabel() {
+    const { GET_BINARY: key } = AppEvents.DataChannel
+    const data = { trackHash }
+    return JSON.stringify({ key, data })
+  }
+
+  function getSourceBuffer(): Promise<SourceBuffer> {
+    return new Promise<SourceBuffer>(executor)
+
+    function executor(resolved: (value: SourceBuffer) => void, rejected: (value: unknown) => void) {
+      mediaSource.onsourceopen = onSourceOpen
+
+      function onSourceOpen () {
+        // TODO: Move to settings, constants or smth
+        const buffer = mediaSource.addSourceBuffer('audio/webm; codecs="opus"')
+        resolved(buffer)
+      }
+    }
+  }
 }
 
 function onDataChannelMessage({data: message}: { data: string }) {
@@ -51,8 +141,52 @@ function onDataChannelMessage({data: message}: { data: string }) {
     const {key, data} = JSON.parse(message)
     if (key === 'library')
       dispatchDataChannelLibrary({key, data})
+    else if (key === 'PING')
+      console.log('PING')
+    else {
+      console.warn('Undefined message:', data)
+    }
   } catch (e) {
     console.warn('Invalid message from data channel')
+  }
+}
+
+function onDataChannel({ channel }: RTCDataChannelEvent) {
+  try {
+    const { key, data } = JSON.parse(channel.label)
+    const { trackHash } = data
+    if (key !== AppEvents.DataChannel.GET_BINARY) return
+
+    streamRequestedTrack(trackHash, channel)
+  } catch (_) {}
+}
+
+function streamRequestedTrack(trackHash: string, dataChannel: RTCDataChannel) {
+  // TODO: Refactor this
+  db.binaryTracks
+    .filter(({ hash }) => hash === trackHash)
+    .toArray()
+    .then(onFulfilled)
+    .catch(console.error)
+
+  function onFulfilled(binaries: Array<ITrackBinary>) {
+    const { binary } = binaries.pop() || {}
+    if (!binary) throw new Error('Track not found')
+    const { byteLength } = binary
+    let sentDataAmount = 250000
+
+    if (!binary) throw new Error('Track not found')
+    dataChannel.send(binary.slice(0, 250000))
+    dataChannel.onbufferedamountlow = onBufferedAmountLow
+
+    function onBufferedAmountLow() {
+      if (!binary) throw new Error('Track not found')
+      dataChannel.send(binary.slice(sentDataAmount, sentDataAmount += 250000 ))
+      if (sentDataAmount >= byteLength) {
+        dataChannel.onbufferedamountlow = null
+        dataChannel.send('END')
+      }
+    }
   }
 }
 
@@ -85,6 +219,7 @@ export async function createOffer(): Promise<{id: string, offer: RTCSessionDescr
   pc.onconnectionstatechange = getConnectionEndHandler(connectionID, pc)
   // pc.onicegatheringstatechange = console.log
   pc.onicecandidate = onICECandidate
+  pc.ondatachannel = onDataChannel
   dataChannel.onmessage = onDataChannelMessage
   dataChannel.onopen = dispatchDataChannelOpen
 
@@ -122,6 +257,7 @@ export async function createAnswer(connectionID: string, offerer: string, offer:
   dataChannel.onopen = dispatchDataChannelOpen
 
   pc.onconnectionstatechange = getConnectionEndHandler(connectionID, pc)
+  pc.ondatachannel = onDataChannel
   // pc.onicegatheringstatechange = console.log
   pc.onicecandidate = onIceCandidate
 

@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
-import {pcs, observeConnections, pingPeer} from "../RTC";
+import {pcs, pingPeer} from "../RTC";
+import {observeApp} from "../Observe";
 
 export default function Connection () {
   const id = localStorage.getItem('id')
@@ -31,10 +32,10 @@ export default function Connection () {
 
   function initialize() {
     handlePcsChange()
-    observeConnections.addEventListener('change', handlePcsChange)
+    observeApp.addEventListener('change', handlePcsChange)
 
     return function cleanup () {
-      observeConnections.removeEventListener('change', handlePcsChange)
+      observeApp.removeEventListener('change', handlePcsChange)
     }
 
     function handlePcsChange() {

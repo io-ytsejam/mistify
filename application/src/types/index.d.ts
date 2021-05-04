@@ -11,7 +11,6 @@ type FileProcessing = {
 }
 
 type Artist = {
-  id: string
   name: string
   genre: string
   origin: string
@@ -19,6 +18,8 @@ type Artist = {
   ended?: number
   picture?: ArrayBuffer
   link?: URL
+  // TODO: Probably userToken should be assigned in array to every track
+  owner: string
 }
 
 type AlbumType = 'lp'|'ep'|'single'
@@ -27,14 +28,16 @@ type Album = {
   name: string
   type: AlbumType
   releaseDate: Date
-  picture?: ArrayBuffer,
+  picture?: ArrayBuffer
   tracks?: Array<Track>
+  artist?: Artist
 }
 
 type Track = {
-  binary?: ArrayBuffer
+  hash: string
   name: string
   length: number
+  broadcasters: Array<string>
 }
 
 type Upload = {
@@ -71,9 +74,23 @@ type UploadContextType = {
   setState: (state: Upload|((state: Upload) => Upload)) => void
 }
 
+type NowPlaying = {
+  URL: string
+}
+
+type PlayerContextType = {
+  state: NowPlaying
+  setState: (state: NowPlaying|((state: NowPlaying) => NowPlaying)) => void
+}
+
 interface PeerConnection {
   pc: RTCPeerConnection
   id: string
   peerID: string,
   dataChannel?: RTCDataChannel
+}
+
+interface TrackStream {
+  mediaSource: MediaSource
+  buffer: SourceBuffer
 }

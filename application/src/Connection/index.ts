@@ -1,21 +1,20 @@
-/** Glue code between RTC logic and WebSocket signaling */
+/** Data interchange using RTC, glue code between RTC logic and WebSocket signaling */
 
 import {
   acceptAnswer,
   addICE,
   broadCastMessage,
-  ConnectionEvents,
   createAnswer,
   createOffer,
-  observeConnections,
   pcs
 } from "../RTC";
-import MainDB, {IAlbum} from "../MainDB";
 
-const db = new MainDB()
+import {handleReceivedLibrary, propagateLibrary} from "../LibraryController";
+import {AppEvents, observeApp} from "../Observe";
+
 const { hostname } = window.location
 const webSocket = new WebSocket(`ws://${hostname}:8080`);
-const id = localStorage.getItem('id')
+const userID = localStorage.getItem('id')
 
 onConnect(onMembersUpdate)
 
@@ -30,13 +29,13 @@ function onMembersUpdate(peers: Array<string>) {
 
 function connectWithPeers(peers: Array<string>) {
   peers
-    .filter(peer => peer !== id) // We don't want to connect with ourselves
+    .filter(peer => peer !== userID) // We don't want to connect with ourselves
     .forEach(connectWithPeer)
 }
 
 function addListeners() {
-  observeConnections.addEventListener(ConnectionEvents.DATA_CHANNEL_OPEN, propagateLibrary)
-  observeConnections.addEventListener(ConnectionEvents.DataChannel.LIBRARY, (({detail}: CustomEvent) => console.log(detail)) as EventListener)
+  observeApp.addEventListener(AppEvents.DATA_CHANNEL_OPEN, propagateLibrary)
+  observeApp.addEventListener(AppEvents.DataChannel.RECEIVED_REMOTE_LIBRARY, handleReceivedLibrary as EventListener)
 }
 
 /** Hook-up all logic with WebSocket */
@@ -124,17 +123,4 @@ export async function connectWithPeer(id: string) {
   const respondTo = localStorage.getItem('id')
 
   sendMessage("connectWithPeer", JSON.stringify({id, offer, respondTo}))
-}
-
-function propagateLibrary() {
-  db.albums.toArray().then(handleDBResult)
-
-  function handleDBResult(albums: Array<IAlbum>) {
-    const message = JSON.stringify({
-      key: 'library',
-      data: albums
-    })
-
-    broadCastMessage(message)
-  }
 }

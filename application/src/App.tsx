@@ -22,8 +22,12 @@ import Library from "./Library";
 import Upload from "./UploadMusic/Upload";
 import {v4 as uuid} from "uuid";
 
+const PlayerContext = React.createContext<PlayerContextType|undefined>(undefined)
+
+export { PlayerContext }
 
 export default function App() {
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({URL: ''})
   useEffect(function () {
     const peerID = localStorage.getItem('id')
     if (!peerID) {
@@ -38,53 +42,62 @@ export default function App() {
   jss.createStyleSheet(styles).attach()
   jss.use(defaultUnit(options))
 
-  return <Router>
-    <div
-      style={{
-        backgroundColor: theme.colors.secondary,
-        height: '100vh',
-        boxSizing: 'border-box',
-        overflowY: 'scroll',
-        paddingBottom: '5.5rem'
-      }}
-    >
+  return <PlayerContext.Provider value={{ state: nowPlaying, setState (state) {
+    if (typeof state === 'function') {
+      const setState = state as ((state: NowPlaying) => NowPlaying)
+      setNowPlaying(setState(nowPlaying))
+    } else {
+      setNowPlaying(state as NowPlaying)
+    }
+  }}}>
+    <Router>
+      <div
+        style={{
+          backgroundColor: theme.colors.secondary,
+          height: '100vh',
+          boxSizing: 'border-box',
+          overflowY: 'scroll',
+          paddingBottom: '5.5rem'
+        }}
+      >
 
-      <Switch>
-        <Route path='/network'>
-          <Connection />
-        </Route>
-        <Route path='/library'>
-          <Library />
-        </Route>
-        <Route path='/upload'>
-          <Upload />
-        </Route>
-      </Switch>
-      <SlidablePanel>
-        {/*<Player chunks={new Array<ArrayBuffer>()}/>*/}
-      </SlidablePanel>
-      <div className={navbar}>
-        <Link replace to='/upload'>
-          <div className={navbarButton}>
-            <BackupOutlinedIcon />
-            <p>Upload</p>
-          </div>
-        </Link>
-        <Link replace to='/library'>
-          <div className={navbarButton}>
-            <LibraryMusicOutlinedIcon />
-            <p>Library</p>
-          </div>
-        </Link>
-        <Link replace to='/network'>
-          <div className={navbarButton}>
-            <WifiTetheringOutlinedIcon />
-            <p>Network</p>
-          </div>
-        </Link>
+        <Switch>
+          <Route path='/network'>
+            <Connection />
+          </Route>
+          <Route path='/library'>
+            <Library />
+          </Route>
+          <Route path='/upload'>
+            <Upload />
+          </Route>
+        </Switch>
+        <SlidablePanel>
+          <Player chunks={new Array<ArrayBuffer>()}/>
+        </SlidablePanel>
+        <div className={navbar}>
+          <Link replace to='/upload'>
+            <div className={navbarButton}>
+              <BackupOutlinedIcon />
+              <p>Upload</p>
+            </div>
+          </Link>
+          <Link replace to='/library'>
+            <div className={navbarButton}>
+              <LibraryMusicOutlinedIcon />
+              <p>Library</p>
+            </div>
+          </Link>
+          <Link replace to='/network'>
+            <div className={navbarButton}>
+              <WifiTetheringOutlinedIcon />
+              <p>Network</p>
+            </div>
+          </Link>
+        </div>
       </div>
-    </div>
-  </Router>
+    </Router>
+  </PlayerContext.Provider>
 }
 
 const styles = {

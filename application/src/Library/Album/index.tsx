@@ -19,7 +19,7 @@ export default function Album({album, onClick}: AlbumProps) {
       }}
     >
       <p>{name}</p>
-      <p className={year}>{2020}</p>
+      <p className={year}>{releaseYear}</p>
     </div>)
 }
 

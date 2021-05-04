@@ -12,7 +12,7 @@ export default function SlidablePanel({children}: SlidablePanelProps) {
       position: 'fixed',
       bottom: '3rem',
       width: '100vw',
-      height: '2.5rem',
+      height: '4.1rem',
       boxSizing: 'border-box'
     },
     container: {

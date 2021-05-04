@@ -26,6 +26,7 @@ export default function AddTracks () {
     <div className={inputsWrapper}>
       {filesProcessing?.map((fileProcessing, i) =>
         <TrackUpload
+          key={i}
           index={i}
           fileProcessing={fileProcessing}
           setFileProcessing={prepareReplaceFileProcessing(i)}

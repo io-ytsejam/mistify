@@ -13,7 +13,7 @@ import {v4 as uuid} from "uuid";
 import {css} from "@emotion/core";
 import {MoonLoader} from "react-spinners";
 import theme from "../../Theme";
-import MainDB, {IAlbum, IArtist, ITrackBinary, ITracks} from "../../MainDB";
+import MainDB, {IAlbum, IArtist} from "../../MainDB";
 
 /**
  * Handle whole logic regarding
@@ -22,7 +22,7 @@ import MainDB, {IAlbum, IArtist, ITrackBinary, ITracks} from "../../MainDB";
 
 
 const contextValue: Upload = {
-  artist: { id: uuid(), name: '', origin: '', genre: '', started: 1900 },
+  artist: { name: '', origin: '', genre: '', started: 1900, owner: localStorage.getItem('id') || '' },
   album: { name: '', type: 'lp', releaseDate: new Date() },
   validation: {
     artist: {
@@ -65,55 +65,56 @@ export default function Upload() {
     setProcessingInProgress(true)
   }, [filesProcessing, processingInProgress])
 
-  function insertToDB(filesProcessing: Array<FileProcessing>) {
+  async function insertToDB(filesProcessing: Array<FileProcessing>) {
+    const userID = localStorage.getItem('id') || ''
     const albumID = uuid()
     const { album, artist } = uploadState
+    const db = new MainDB()
+
+    const { albums: artistExistingAlbums } = await db.artists
+      .where(["owner", "name"])
+      .equals([artist.owner, artist.name])
+      .last()
+      .catch(console.error)|| { albums: [] }
 
     const tracksBinaries = filesProcessing.map(({webMFile, hash}) => ({
         binary: webMFile as ArrayBuffer, hash, id: uuid()
     }))
     const tracks = filesProcessing.map(({hash, name, duration}) => ({
-      name, albumID, hash, length: duration, id: uuid()
+      name, albumID, hash, length: duration, id: uuid(), broadcasters: [userID]
     }))
-    const newAlbum = {
-      id: albumID,
+    const newAlbum: IAlbum = {
       name: album.name,
       type: album.type,
-      artistID: artist.id,
       tracks,
       releaseDate: album.releaseDate.toLocaleDateString()
     }
     const newArtist: IArtist = {
-      albums: [newAlbum],
+      albums: [...artistExistingAlbums, newAlbum],
       ended: artist.ended,
       genre: artist.genre,
-      id: artist.id,
       name: artist.name,
       origin: artist.origin,
       started: artist.started,
-      userToken: localStorage.getItem('id') || '',
+      owner: userID,
       // TODO: Pictures
       picture: '',
       link: artist.link?.toString()
     }
 
-    const db = new MainDB()
-
-    Promise.all(tracks.map(track => db.tracks.add(track)))
-      .then(console.info)
-      .catch(console.error)
-
     Promise.all(tracksBinaries.map(trackBinary => db.binaryTracks.add(trackBinary)))
       .then(console.info)
       .catch(console.error)
 
-    db.albums.add(newAlbum)
-      .then(console.info)
-      .catch(console.error)
-
-    db.artists.add(newArtist)
-      .then(console.info)
-      .catch(console.error)
+    db.artists
+      .where(["owner", "name"])
+      .equals([artist.owner, artist.name])
+      .delete()
+      .finally(() => {
+        db.artists.add(newArtist)
+          .then(console.info)
+          .catch(console.error)
+      })
   }
 
   // TODO: Refactor it plsss :ccccc
