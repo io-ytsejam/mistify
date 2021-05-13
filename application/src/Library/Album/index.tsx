@@ -1,5 +1,6 @@
 import {createUseStyles, Styles} from "react-jss";
 import {MouseEventHandler} from "react";
+import TopBar from "../../TopBar";
 
 interface AlbumProps {
   album: Album,
@@ -7,7 +8,7 @@ interface AlbumProps {
 }
 
 export default function Album({album, onClick}: AlbumProps) {
-  const { name, releaseDate } = album
+  const { name, releaseDate, artwork } = album
   const releaseYear = releaseDate.getFullYear()
   const { container, year } = useStyles()
 
@@ -18,6 +19,7 @@ export default function Album({album, onClick}: AlbumProps) {
         onClick(album)
       }}
     >
+      <img src={artwork} alt=""/>
       <p>{name}</p>
       <p className={year}>{releaseYear}</p>
     </div>)
@@ -26,11 +28,11 @@ export default function Album({album, onClick}: AlbumProps) {
 const useStyles = createUseStyles({
   container: {
     position: 'relative',
-    backgroundColor: 'crimson',
     '&:first-child': {
       gridRow: 1,
       gridColumn: 1,
     },
+    boxShadow: '0 0 .5rem black',
     cursor: 'pointer',
     textShadow: '0 0 .25rem black',
     fontSize: '.75rem',
@@ -45,6 +47,10 @@ const useStyles = createUseStyles({
     },
     '&:active': {
       filter: 'brightness(.9)'
+    },
+    '& img': {
+      position: 'absolute',
+      width: '100%'
     }
   },
   year: {

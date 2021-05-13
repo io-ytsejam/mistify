@@ -4,26 +4,15 @@ import Button from "../../Button";
 import ArtistPanel from "../../ArtistPanel";
 import React, {useContext} from "react";
 import {UploadContext} from "../Upload";
+import AlbumTrack from "../../Library/AlbumView/AlbumTrack";
 
 export default function Summary () {
   const { viewHeaderDesc, viewHeader, container,
-    albumPic, albumPicUpload, albumInfo } = useStyles()
+    albumPic, albumPicUpload, albumInfo, tracks } = useStyles()
   const { state: uploadState, setState: setUploadState } = useContext(UploadContext) as UploadContextType
   const {artist, album, filesProcessing} = uploadState
-  const {name: artistName, origin, started, ended, picture: artistPicture, link, genre} = artist
-  const {name: albumName, picture: albumPicture, type, releaseDate} = album
+  const {name: albumName, artwork, type, releaseDate} = album
   const albumDuration = filesProcessing?.reduce((acc, {duration}) => acc + duration, 0)
-
-  let artistPicURL = ''
-  let albumPicURL = ''
-
-  try {
-    artistPicURL = URL.createObjectURL(artistPicture)
-  } catch (_) {}
-
-  try {
-    albumPicURL = URL.createObjectURL(albumPicture)
-  } catch (_) {}
 
   return <div className={container}>
     <div className={viewHeader}>
@@ -33,20 +22,14 @@ export default function Summary () {
       <p>Review carefully all your input before proceeding. You can go back to any step to make changes</p>
     </div>
     <ArtistPanel
-      genre={genre}
-      name={artistName}
-      origin={origin}
-      started={started}
-      ended={ended}
-      picture={artistPicURL}
+      artist={artist}
     />
     <div className={albumPicUpload}>
-      <div className={albumPic}>
-        <img
-          src={albumPicURL}
-          alt="Album picture"
-        />
-      </div>
+      <img
+        className={albumPic}
+        src={artwork}
+        alt="Album picture"
+      />
       <div className={albumInfo}>
         <div>
           <p style={{fontSize: '1rem'}}>{albumName}</p>
@@ -59,10 +42,12 @@ export default function Summary () {
       </div>
     </div>
     <div>
-      <h3>Track list</h3>
-      <ol>
-        {filesProcessing?.map(({name}, i) => <li key={i}>{name}</li>)}
-      </ol>
+      <div className={viewHeader}>
+        <p>Track list</p>
+      </div>
+      <div className={tracks}>
+        {filesProcessing?.map(({name}, i) => <AlbumTrack>{name}</AlbumTrack>)}
+      </div>
     </div>
     <div>
       <Button
@@ -93,7 +78,7 @@ const useStyles = createUseStyles({
   },
   container: {
     marginTop: '.5rem',
-    marginBottom: '1rem',
+    marginBottom: '4rem',
     display: 'grid',
     gridRowGap: '1rem',
     gridColumnGap: '1rem',
@@ -124,5 +109,8 @@ const useStyles = createUseStyles({
     flexDirection: 'column',
     justifyContent: 'space-between',
     fontSize: '.875rem'
+  },
+  tracks: {
+    marginTop: '.5rem'
   }
 })

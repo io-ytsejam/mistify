@@ -4,48 +4,65 @@ import Button from "../../Button";
 import {useHistory} from "react-router-dom";
 import {createUseStyles} from "react-jss";
 import theme from "../../Theme";
-import {requestTrackStream} from "../../RTC";
 import {PlayerContext} from "../../App";
+import AlbumTrack from "./AlbumTrack";
 
 interface AlbumViewProps {
-  album: Album
+  album: Album|undefined
+  artist: Artist|undefined
 }
 
-export default function AlbumView ({ album }: AlbumViewProps) {
+export default function AlbumView ({ album, artist }: AlbumViewProps) {
   const history = useHistory()
-  const { name, tracks, artist } = album
-  const { name: artistName, owner } = artist || {}
-  const { viewHeader, container } = useStyles()
-  const { setState: setPlayerState } = useContext(PlayerContext) as PlayerContextType
+  const {viewHeader, container, tracksContainer} = useStyles()
+  const {setState: setPlayerState} = useContext(PlayerContext) as PlayerContextType
+  if (!album || !artist) throw new Error('Album view require artist and album')
+  const { name, tracks } = album
+  const {name: artistName, owner} = artist || {}
 
   return <div className={container}>
-    <TopBar
+    {/*<TopBar
       title={artistName || ''}
-      buttons={ <Button
+      buttons={<Button
         size='s'
         variant='second'
-        style={{marginRight: '1rem'}}
         onClick={history.goBack}
-      >Library</Button> }
-    />
+      >Library</Button>}
+    />*/}
     <div>
       <p className={viewHeader}>{name}</p>
-      <ol>
-        {tracks?.map(({ name, hash: trackHash, broadcasters: userTokens }, i) =>
-            <li
-              onClick={async () => {
-                if (!owner) return
-                setPlayerState({URL: await requestTrackStream({ trackHash, userTokens })})
-              }}
-              key={i}
-            >
-              {name}
-            </li>
+      <div className={tracksContainer}>
+        {tracks?.map((track, i) =>
+          <AlbumTrack
+            index={i + 1}
+            track={track}
+            onClick={playTrack(track)}
+            key={i}
+          />
         )}
-      </ol>
+      </div>
     </div>
   </div>
+
+  function playTrack(track: Track) {
+    return play
+
+    async function play() {
+      if (!album) return
+      const queue = createQueue(album, track.hash)
+      if (!queue) return
+      setPlayerState(state => ({ ...state, track, artist, album, queue }))
+    }
+  }
+
+  function createQueue(album: Album, activeTrackHash: string): PlayerQueue|undefined {
+    if (!artist || !album.tracks) return
+    return album.tracks.map(track => (
+      { track, album, artist, active: activeTrackHash === track.hash }
+    ))
+  }
 }
+
 
 const useStyles = createUseStyles({
   '@keyframes container-enter': {
@@ -53,7 +70,7 @@ const useStyles = createUseStyles({
     to: { transform: 'translateX(0)' },
   },
   container: {
-    marginTop: '.5rem',
+    marginTop: '1rem',
     display: 'grid',
     gridRowGap: '1rem',
     gridColumnGap: '1rem',
@@ -67,5 +84,8 @@ const useStyles = createUseStyles({
   },
   viewHeaderDesc: {
     fontSize: '.625rem'
+  },
+  tracksContainer: {
+    marginTop: '1rem'
   }
 })

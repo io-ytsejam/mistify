@@ -1,8 +1,8 @@
 import { v4 as uuid } from 'uuid';
-import {sendICECandidate} from "../Connection";
-import MainDB, {IAlbum, IArtist, ITrackBinary} from "../MainDB";
-import {addTrackBroadcaster, propagateLibrary} from "../LibraryController";
-import {AppEvents, dispatchDataChannelLibrary, dispatchDataChannelOpen, dispatchPcsChange} from "../Observe";
+import { sendICECandidate } from "../Connection";
+import MainDB, {IBinaryData, IBinaryMetadata} from "../MainDB";
+import { addDataSeeder } from "../LibraryController";
+import { AppEvents, dispatchDataChannelLibrary, dispatchDataChannelOpen, dispatchPcsChange } from "../Observe";
 
 export { pcs }
 
@@ -32,12 +32,91 @@ export function broadCastMessage(message: string) {
     .forEach(dc => dc?.send(message))
 }
 
-/** Kind of a hack, kind of a not. We write our track request in channel label.
+export async function requestBinaryData(meta: IBinaryMetadata): Promise<Blob> {
+  const { seeders } = meta
+
+  return await initStream()
+
+  async function initStream(): Promise<Blob> {
+    try {
+      const blob = await initLocalStream()
+      console.info('Data found locally')
+      return blob
+    } catch ({ message }) {
+      const blob = await initRemoteStream()
+      console.warn(message)
+      console.info('Data found remotely')
+      return blob
+    }
+  }
+
+  async function initLocalStream() {
+    return db.binaryData
+      .filter(({ hash }) => hash === meta.hash)
+      .last()
+      .then(onFulfilled)
+    }
+
+  function onFulfilled(data: IBinaryData | undefined) {
+    const { binary } = data || {}
+    if (binary) {
+      assurePeerIsSeeder()
+      return new Blob([binary])
+    } else throw new Error('Track not found locally')
+  }
+
+  function assurePeerIsSeeder() {
+    db.binaryMetadata.filter(({ hash }) => hash === meta.hash)
+      .first().then(exist => {
+        if (!exist) db.binaryMetadata.add(meta)
+      })
+  }
+
+  function initRemoteStream(): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const { pc, peerID } = pcs.find(({peerID, pc}) => seeders.some(userToken => userToken === peerID && pc.connectionState === 'connected')) || {}
+      if (!pc) throw new Error('No peer streaming this track is reachable')
+      console.debug("Streaming from", peerID)
+      const dataParts: Array<ArrayBuffer> = []
+      const dataChannel = pc.createDataChannel(getLabel())
+      dataChannel.onmessage = onMessage
+
+      function onMessage({data}: { data: ArrayBuffer|string }) {
+        if (typeof data == 'string') {
+          if (data === 'NOT_FOUND') return reject('Peer do not have requested data')
+          if (data !== 'END') return
+          const blob = new Blob(dataParts)
+          handleStreamEnd(blob)
+          dataChannel.close()
+          return resolve(blob)
+        } else {
+          dataParts.push(data)
+        }
+      }
+    })
+
+    function getLabel() {
+      const { GET_BINARY: key } = AppEvents.DataChannel
+      const data = { trackHash: meta.hash }
+      return JSON.stringify({ key, data })
+    }
+
+    async function handleStreamEnd(data: Blob) {
+      db.binaryData
+        .add({ binary: await data.arrayBuffer(), hash: meta.hash })
+        .then(() => addDataSeeder(meta.hash, userID))
+        .catch(console.error)
+    }
+  }
+}
+
+/** We write our track request in channel label.
  * When another peer will receive onDataChannel event, them will try to parse
  * data channel's label, and if it happen to be a stream request, them will
  * handle it. */
-export async function requestTrackStream({trackHash, userTokens}: {trackHash: string, userTokens: Array<string>}): Promise<string> {
+export async function requestTrackStream(meta: IBinaryMetadata): Promise<string> {
   const mediaSource = new MediaSource()
+  const { hash: trackHash, seeders } = meta
 
   // Check is track is on host. If not, stream from someone.
   getSourceBuffer()
@@ -58,36 +137,28 @@ export async function requestTrackStream({trackHash, userTokens}: {trackHash: st
   }
 
   async function initLocalStream(buffer: SourceBuffer) {
-    return db.binaryTracks
+    return db.binaryData
       .filter(({ hash }) => hash === trackHash)
       .last()
       .then(onFulfilled)
 
-    function onFulfilled(track: ITrackBinary | undefined) {
+    function onFulfilled(track: IBinaryData | undefined) {
       if (track) {
         buffer.appendBuffer(track.binary)
-        assurePeerIsBroadcaster()
-      } else throw new Error('Track not found')
+        assurePeerIsSeeder()
+      } else throw new Error('Track not found locally')
     }
 
-    function assurePeerIsBroadcaster() {
-      db.artists.filter(({ albums }) =>
-        albums.some(({ tracks }) =>
-          tracks.some(({ broadcasters }) =>
-            broadcasters.some(broadcaster =>
-              broadcaster === localStorage.getItem('id')
-            )
-          )
-        )
-      ).first()
-        .then(artist => {
-          if (!artist) addTrackBroadcaster(trackHash, userID)
+    function assurePeerIsSeeder() {
+      db.binaryMetadata.filter(({ hash }) => hash === meta.hash)
+        .first().then(exist => {
+        if (!exist) db.binaryMetadata.add(meta)
       })
     }
   }
 
   function initRemoteStream(buffer: SourceBuffer) {
-    const { pc, peerID } = pcs.find(({peerID, pc}) => userTokens.some(userToken => userToken === peerID && pc.connectionState === 'connected')) || {}
+    const { pc, peerID } = pcs.find(({peerID, pc}) => seeders.some(userToken => userToken === peerID && pc.connectionState === 'connected')) || {}
     if (!pc) throw new Error('No peer streaming this track is reachable')
     console.debug("Streaming from", peerID)
     const trackParts: Array<ArrayBuffer> = []
@@ -109,9 +180,9 @@ export async function requestTrackStream({trackHash, userTokens}: {trackHash: st
   async function handleStreamEnd(trackParts: Array<ArrayBuffer>) {
     const blob = new Blob(trackParts)
 
-    db.binaryTracks
+    db.binaryData
       .add({ binary: await blob.arrayBuffer(), hash: trackHash })
-      .then(() => addTrackBroadcaster(trackHash, userID))
+      .then(() => addDataSeeder(trackHash, userID))
       .catch(console.error)
   }
 
@@ -163,13 +234,13 @@ function onDataChannel({ channel }: RTCDataChannelEvent) {
 
 function streamRequestedTrack(trackHash: string, dataChannel: RTCDataChannel) {
   // TODO: Refactor this
-  db.binaryTracks
+  db.binaryData
     .filter(({ hash }) => hash === trackHash)
     .toArray()
     .then(onFulfilled)
     .catch(console.error)
 
-  function onFulfilled(binaries: Array<ITrackBinary>) {
+  function onFulfilled(binaries: Array<IBinaryData>) {
     const { binary } = binaries.pop() || {}
     if (!binary) throw new Error('Track not found')
     const { byteLength } = binary

@@ -56,6 +56,7 @@ export default function TrackUpload({index, setFileProcessing, fileProcessing}: 
   return <div className={uploadMusic}>
     <div className={loadTrackInputWrapper}>
       <Input
+        key={Math.random()}
         value={name || 'Load...'}
         disabled={processingInProgress}
         onChange={({target}) => {

@@ -6,18 +6,24 @@ import Button from "../../Button";
 import MainDB, {IArtist} from "../../MainDB";
 import {useHistory} from "react-router-dom";
 import {UploadContext} from "../Upload";
+import {requestBinaryData} from "../../RTC";
+import {getArtistPictureURL, mapIArtistsOnArtists} from "../../lib";
 
 export default function ChooseArtist() {
   const history = useHistory()
   const { state: uploadState, setState: setUploadState } = useContext(UploadContext) as UploadContextType
   const { viewHeader, viewHeaderDesc, container, chooseArtistButton, noArtistsText } = createUseStyles(styles)()
   const db = new MainDB()
-  const [artists, setArtists] = useState<Array<IArtist>>()
+  const [artists, setArtists] = useState<Array<Artist>>()
 
 
   useEffect(function () {
+    const userID = localStorage.getItem('id')
+
     db.artists
+      .filter(({ owner }) => owner === userID)
       .toArray()
+      .then(mapIArtistsOnArtists)
       .then(setArtists)
   }, [])
 
@@ -34,10 +40,7 @@ export default function ChooseArtist() {
       {artists?.map((artist, i) =>
         <ArtistPanel
           key={i}
-          name={artist.name}
-          genre={artist.genre}
-          origin={artist.origin}
-          started={artist.started}
+          artist={artist as Artist}
         >
           <Button
             size='s'

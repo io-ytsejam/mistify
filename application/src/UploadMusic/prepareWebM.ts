@@ -9,12 +9,12 @@ export async function convertMP3ToOpus(mp3: ArrayBuffer): Promise<Uint8Array> {
   if (!ffmpeg.isLoaded()) await ffmpeg.load()
   ffmpeg.FS('writeFile', 'test.mp3', new Uint8Array(mp3))
   await ffmpeg.run("-i", "test.mp3", "-c:a", "libopus", "out.opus")
-  console.log('CONVERT COMPLETED')
+  console.log('CONVERTING COMPLETED')
   return ffmpeg.FS('readFile', 'out.opus')
 }
 
 export async function createWebM(opus: Uint8Array): Promise<ArrayBuffer> {
-  const FFMPEG_ARGS = ["-i", "test.opus", "-c:v", "libvpx", "-c:a", "libopus", "out.opus", "-f", "webm", "streamable.webm"]
+  const FFMPEG_ARGS = ["-i", "test.opus", "-row-mt", "1", "-c:v", "libvpx", "-c:a", "libopus", "out.opus", "-f", "webm", "streamable.webm"]
   ffmpeg.FS('writeFile', 'test.opus', opus)
   await ffmpeg.run(...FFMPEG_ARGS)
   console.log('MUXING COMPLETED')

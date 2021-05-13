@@ -10,10 +10,15 @@ export default function UploadDetails () {
   const { container, viewHeader, viewHeaderDesc,
     albumPic, albumPicUpload, loadPictureButtonHelperText,
     buttonWrapper, inputsWrapper } = useStyles()
-
   const uploadContextWithReducer = useContext(UploadContext)
   if (uploadContextWithReducer === undefined) throw new Error('Context must be provided')
   const { state: uploadState, setState: setUploadState } = uploadContextWithReducer
+  const { artwork } = uploadState.album
+  let fileInput: HTMLInputElement
+
+  function setFileInput(input: HTMLInputElement) {
+    fileInput = input
+  }
 
   return <div className={container}>
     <div className={viewHeader}>
@@ -24,10 +29,30 @@ export default function UploadDetails () {
     </div>
     <div className={albumPicUpload}>
       <div className={albumPic}>
-        <img src="xd.jpeg" alt="Album picture"/>
+        <img src={artwork} alt="Album"/>
       </div>
       <div className={buttonWrapper}>
-        <Button size='s'>LOAD PICTURE</Button>
+        <Button onClick={() => {
+          fileInput.click()
+        }} size='s'>LOAD PICTURE</Button>
+        <input
+          type="file"
+          hidden
+          ref={setFileInput}
+          onChange={({ target }) => {
+            const { files } = target
+            if (!files) return
+            files[0].arrayBuffer().then(ab => {
+              setUploadState(state => ({
+                ...state,
+                album: {
+                  ...state.album,
+                  artwork: URL.createObjectURL(new Blob([ab] ))
+                }
+              }))
+            })
+          }}
+        />
         <p className={loadPictureButtonHelperText}>
           If you leave it empty, picture from any audio track will be used
         </p>
@@ -112,7 +137,11 @@ const useStyles = createUseStyles({
     width: '10rem',
     height: '10rem',
     boxShadow: '0 0 .5rem black',
-    borderRadius: .1875
+    borderRadius: .1875,
+    '& img': {
+      width: '100%',
+      height: '100%'
+    }
   },
   albumPicUpload: {
     display: 'grid',

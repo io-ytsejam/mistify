@@ -2,17 +2,28 @@ import Dexie from "dexie";
 
 export default class MainDB extends Dexie {
   artists: Dexie.Table<IArtist, string>
-  binaryTracks: Dexie.Table<ITrackBinary, string>
+  binaryData: Dexie.Table<IBinaryData, string>
+  binaryMetadata: Dexie.Table<IBinaryMetadata, string>
+  getArtistPicture: (artist: IArtist) => Promise<IBinaryMetadata|undefined>
+  getAlbumArtwork: (album: IAlbum) => Promise<IBinaryMetadata|undefined>
 
   constructor () {
     super("MainDB");
-    this.version(2).stores({
+    this.version(6).stores({
       artists: "[owner+name]",
-      binaryTracks: "&hash"
+      binaryData: '&hash',
+      binaryMetadata: '&hash'
     });
 
     this.artists = this.table("artists");
-    this.binaryTracks = this.table("binaryTracks");
+    this.binaryData = this.table("binaryData")
+    this.binaryMetadata = this.table("binaryMetadata")
+    this.getArtistPicture = async function ({ pictureHash }: IArtist) {
+      return this.binaryMetadata.where('hash').equals(pictureHash).first()
+    }
+    this.getAlbumArtwork = async function ({ artworkHash }: IAlbum) {
+      return this.binaryMetadata.where('hash').equals(artworkHash).first()
+    }
   }
 }
 
@@ -24,26 +35,30 @@ export interface IArtist {
   origin: string
   owner: string
   link?: string
-  picture?: string
   albums: Array<IAlbum>
+  pictureHash: string
 }
 
 export interface IAlbum {
   name: string
   type: string
   releaseDate: string
-  tracks: Array<ITracks>
+  tracks: Array<ITrack>
+  artworkHash: string
 }
 
-export interface ITracks {
+export interface ITrack {
   name: string
-  albumID: string
   length: number
   hash: string
-  broadcasters: Array<string>
 }
 
-export interface ITrackBinary {
+export interface IBinaryMetadata {
+  hash: string
+  seeders: Array<string>
+}
+
+export interface IBinaryData {
   hash: string
   binary: ArrayBuffer
 }

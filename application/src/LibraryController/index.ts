@@ -1,36 +1,68 @@
-import MainDB, {IAlbum, IArtist} from "../MainDB";
+import MainDB, {IAlbum, IArtist, IBinaryMetadata, ITrack} from "../MainDB";
 import {broadCastMessage} from "../RTC";
 import {dispatchDBChange, observeApp} from "../Observe";
+import {getTextHash} from "../lib";
 
 const db = new MainDB()
 
 /** Send library to all peers. Be aware that library consists
  *  only information about music, not binary tracks */
-export function propagateLibrary() {
-  db.artists.toArray()
-    .then(handleDBResult)
+export async function propagateLibrary() {
+  getLibraryPropagationData()
+    .then(broadCastMessage)
     .catch(onRejected)
 
   function onRejected({ message }: any) {
     console.warn('Cannot propagate library:', message)
   }
+}
 
-  function handleDBResult(data: Array<IArtist>) {
-    const message = JSON.stringify({ key: 'library', data })
+async function getLibraryPropagationData(): Promise<string> {
+  return Promise.all([
+    await db.artists.toArray(),
+    await db.binaryMetadata.toArray()
+  ]).then(handleDBResult)
+    .catch(err => err)
 
-    broadCastMessage(message)
+  async function handleDBResult([artists, meta]: [Array<IArtist>, Array<IBinaryMetadata>]): Promise<string> {
+    const library = { artists, meta }
+    return JSON.stringify({
+      key: 'library',
+      data: {
+        ...library,
+        hash: await getTextHash(JSON.stringify(library))
+      }
+    })
   }
 }
 
 
 /** Check if some new music came from peer and save it to DB. */
 export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
-  db.transaction("rw", db.artists, executeTransaction)
-    .then(onFulfilled).catch(onRejected)
+  const { artists, meta, hash: receivedLibraryHash } = receivedLibrary
 
-  function executeTransaction() {
+  console.info('Received library')
+  getLibraryPropagationData()
+    .then(putNewLibraryData)
+
+  function putNewLibraryData(libraryPropagationData: string) {
+    const { hash: localLibraryHash } = JSON.parse(libraryPropagationData).data
+
+    if (localLibraryHash === receivedLibraryHash) {
+      return console.info('No changes from received library')
+    }
+
     console.log(receivedLibrary)
-    db.artists.bulkPut(receivedLibrary)
+
+    libraryTransaction()
+  }
+
+  function executeMetaTransaction() {
+    db.binaryMetadata.bulkPut(meta)
+  }
+
+  function executeArtistsTransaction() {
+    db.artists.bulkPut(artists)
   }
 
   function onFulfilled() {
@@ -38,45 +70,29 @@ export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
     dispatchDBChange()
   }
 
-  function onRejected() {
-    console.error('put_received_library')
+  function onRejected(e: any) {
+    console.error('put_received_library', {e})
+  }
+
+  function libraryTransaction() {
+    db.transaction("rw", db.artists, executeArtistsTransaction)
+      .then(onFulfilled).catch(onRejected)
+    db.transaction("rw", db.binaryMetadata, executeMetaTransaction)
+      .then(onFulfilled).catch(onRejected)
   }
 }
 
-export async function addTrackBroadcaster(trackHash: string, broadcaster: string) {
-  const library = await db.artists.toArray()
+export async function addDataSeeder(dataHash: string, seeder: string) {
+  const data = await db.binaryMetadata.filter(({ hash }) => hash === dataHash).last()
 
-  const artist = library.find(({ albums }) => albums.some(({ tracks }) => tracks.some(({ hash }) => hash === trackHash)))
-  const album = artist?.albums.find(({ tracks }) => tracks.some((({ hash }) => hash === trackHash)))
-  const trackInfo = album?.tracks.find(({ hash }) => hash === trackHash)
+  if (!data) return
 
-  if (artist && album && trackInfo) {
-    const updatedTrackInfo = {
-      ...trackInfo,
-      broadcasters: [
-        ...trackInfo.broadcasters,
-        broadcaster
-      ]
-    }
-
-    const updatedAlbum: IAlbum = {
-      ...album,
-      tracks: [
-        ...album.tracks.filter(({ hash }) => hash !== trackHash),
-        updatedTrackInfo
-      ]
-    }
-
-    const updatedArtist: IArtist = {
-      ...artist,
-      albums: [
-        ...artist.albums.filter(album => !album.tracks.some(({ hash }) => hash !== trackHash)),
-        updatedAlbum
-      ]
-    }
-
-    db.artists.put(updatedArtist).then(onFulfilled).catch(console.error)
+  const updatedData = {
+    ...data,
+    seeders: [...data.seeders, seeder]
   }
+
+  db.binaryMetadata.put(updatedData).then(onFulfilled).catch(console.error)
 
   function onFulfilled(value: string) {
     console.log(value)

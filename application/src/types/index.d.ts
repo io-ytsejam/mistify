@@ -16,10 +16,10 @@ type Artist = {
   origin: string
   started: number
   ended?: number
-  picture?: ArrayBuffer
+  picture?: string
   link?: URL
-  // TODO: Probably userToken should be assigned in array to every track
   owner: string
+  albums?: Album[]
 }
 
 type AlbumType = 'lp'|'ep'|'single'
@@ -28,16 +28,15 @@ type Album = {
   name: string
   type: AlbumType
   releaseDate: Date
-  picture?: ArrayBuffer
+  artwork?: string
   tracks?: Array<Track>
-  artist?: Artist
 }
 
 type Track = {
   hash: string
   name: string
   length: number
-  broadcasters: Array<string>
+  seeders: Array<string>
 }
 
 type Upload = {
@@ -74,13 +73,27 @@ type UploadContextType = {
   setState: (state: Upload|((state: Upload) => Upload)) => void
 }
 
+type Playable = {
+  track?: Track
+  album?: Album
+  artist?: Artist
+  active: boolean
+}
+
+type PlayerQueue = Array<Playable>
+
 type NowPlaying = {
   URL: string
+  queue: PlayerQueue
+  track?: Track
+  album?: Album
+  artist?: Artist
+  isPanelExtended: boolean
 }
 
 type PlayerContextType = {
   state: NowPlaying
-  setState: (state: NowPlaying|((state: NowPlaying) => NowPlaying)) => void
+  setState: (state: NowPlaying|((state: NowPlaying) => NowPlaying)) => void,
 }
 
 interface PeerConnection {

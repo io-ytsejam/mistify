@@ -28,6 +28,10 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
 
   const useStyles = createUseStyles({
     button: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
       background: theme.colors.primary,
       color: theme.colors.primaryText,
       fontWeight: "bold",
@@ -57,8 +61,8 @@ export default function Button(props: ButtonProps & React.ButtonHTMLAttributes<H
     },
     icon: {
       extend: 'button',
-      width: '1.5rem',
-      height: '1.5rem',
+      width: props.size === 'l' ? '4rem' : props.size === 'm' ? '3rem' : '1.5rem',
+      height: props.size === 'l' ? '4rem' : props.size === 'm' ? '3rem' : '1.5rem',
       padding: 0
     },
     secondIcon: {

@@ -1,36 +1,64 @@
 import {createUseStyles, Styles} from "react-jss";
 import Button from "../Button";
-import MainDB, {IAlbum, IArtist} from "../MainDB";
+import MainDB from "../MainDB";
 import {useEffect, useState} from "react";
 import Album from "./Album";
-import {Route, Switch, useHistory} from "react-router-dom";
+import { Route, Switch, useHistory, useLocation } from "react-router-dom";
 import AlbumView from "./AlbumView";
 import AlbumCollection from "./AlbumCollection";
-import {broadCastMessage} from "../RTC";
 import {AppEvents, observeApp} from "../Observe";
+import TopBar from "../TopBar";
+import { mapIArtistsOnArtists } from "../lib";
+import ArtistsView from "./ArtistsView";
 
 export default function Library() {
   const history = useHistory()
-  const [albums, setAlbums] = useState<Array<Album>>()
-  const [viewed, setViewed] = useState<Album>()
+  const location = useLocation()
+  const [artists, setArtists] = useState<Array<Artist>>()
+  const [viewAlbum, setViewAlbum] = useState<Album>()
+  const [viewArtist, setViewArtist] = useState<Artist>()
   const db = new MainDB()
-  const { tabs, container } = useStyles({ hackGrid: albums?.length })
+  const { container } = useStyles()
 
   useEffect(initialize, [])
 
-  return <div className={container}>
-    <Switch>
-      <Route path='/library/view-album'>
-        {viewed && <AlbumView album={viewed}/>}
-      </Route>
-      <Route path='/library'>
-        <AlbumCollection
-          albums={albums || []}
-          showAlbum={showAlbum}
-        />
-      </Route>
-    </Switch>
-  </div>
+  const buttonTitle = getTitle()
+
+  return <>
+    <TopBar
+      title={viewArtist ? viewArtist.name : 'Library'} buttons={
+        buttonTitle && <Button
+            onClick={history.goBack}
+            size='s'
+            variant='second'
+        >
+          {buttonTitle}
+        </Button>
+      }
+    />
+    <div className={container}>
+      <Switch>
+        <Route path='/library/view-album'>
+          {viewAlbum && <AlbumView artist={viewArtist} album={viewAlbum}/>}
+        </Route>
+        <Route path='/library/view-artist'>
+          {viewArtist && <AlbumCollection
+              albums={viewArtist.albums || []}
+              showAlbum={showAlbum}
+          />}
+        </Route>
+        <Route path='/library'>
+          {artists && <ArtistsView showArtist={showArtist} artists={artists} />}
+        </Route>
+      </Switch>
+    </div>
+  </>
+
+  function getTitle() {
+    if (location.pathname.match('view-album')) return 'DISCOGRAPHY'
+    if (location.pathname.match('view-artist')) return 'LIBRARY'
+    return ''
+  }
 
   function initialize () {
     queryDB()
@@ -44,26 +72,17 @@ export default function Library() {
   }
 
   function queryDB() {
-    db.artists.toArray().then(onFulfilled)
-
-    function onFulfilled(library: Array<IArtist>) {
-      if (!library) return
-
-      setAlbums(library.flatMap(artist => artist.albums.map(album => ({
-        artist,
-        ...album,
-        releaseDate: parseDate(album.releaseDate)
-      } as Album))))
-    }
+    db.artists.toArray().then(mapIArtistsOnArtists).then(setArtists)
   }
 
   function showAlbum(album: Album) {
-    setViewed(album)
+    setViewAlbum(album)
     history.push('/library/view-album')
   }
 
-  function parseDate(date: string): Date {
-    return new Date(Date.parse(date.split('.').reverse().join('-')))
+  function showArtist(artist: Artist) {
+    setViewArtist(artist)
+    history.push('/library/view-artist')
   }
 }
 

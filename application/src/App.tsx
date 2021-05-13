@@ -1,19 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
+  Link,
+  Redirect
 } from "react-router-dom";
 
 
 import {createUseStyles, jss} from "react-jss";
 import defaultUnit from 'jss-plugin-default-unit'
-import SlidablePanel from './SlidablePanel'
 import Connection from "./Connection/view";
-import {onConnect} from "./Connection";
 import Player from "./Player";
-import UploadMusic from "./UploadMusic";
 import theme from "./Theme";
 import BackupOutlinedIcon from '@material-ui/icons/BackupOutlined';
 import LibraryMusicOutlinedIcon from '@material-ui/icons/LibraryMusicOutlined';
@@ -27,7 +25,7 @@ const PlayerContext = React.createContext<PlayerContextType|undefined>(undefined
 export { PlayerContext }
 
 export default function App() {
-  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({URL: ''})
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({ URL: '', isPanelExtended: false, queue: [] })
   useEffect(function () {
     const peerID = localStorage.getItem('id')
     if (!peerID) {
@@ -42,14 +40,14 @@ export default function App() {
   jss.createStyleSheet(styles).attach()
   jss.use(defaultUnit(options))
 
-  return <PlayerContext.Provider value={{ state: nowPlaying, setState (state) {
+  return <PlayerContext.Provider value={{ state: nowPlaying, setState: useCallback(function (state) {
     if (typeof state === 'function') {
       const setState = state as ((state: NowPlaying) => NowPlaying)
       setNowPlaying(setState(nowPlaying))
     } else {
       setNowPlaying(state as NowPlaying)
     }
-  }}}>
+    }, [nowPlaying])}}>
     <Router>
       <div
         style={{
@@ -62,6 +60,9 @@ export default function App() {
       >
 
         <Switch>
+          <Route exact path='/'>
+            <Redirect to='/library' />
+          </Route>
           <Route path='/network'>
             <Connection />
           </Route>
@@ -72,9 +73,7 @@ export default function App() {
             <Upload />
           </Route>
         </Switch>
-        <SlidablePanel>
-          <Player chunks={new Array<ArrayBuffer>()}/>
-        </SlidablePanel>
+        <Player />
         <div className={navbar}>
           <Link replace to='/upload'>
             <div className={navbarButton}>
@@ -128,6 +127,7 @@ const options = {
 
 const useStyles = createUseStyles({
   navbar: {
+    zIndex: 2324232,
     width: '100%',
     height: '3rem',
     position: 'fixed',

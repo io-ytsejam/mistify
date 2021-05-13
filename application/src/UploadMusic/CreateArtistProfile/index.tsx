@@ -9,27 +9,59 @@ import {UploadContext} from "../Upload";
 export default function CreateArtistProfile () {
   const {container, viewHeader, viewHeaderDesc,
     artistPicUpload, artistPic, loadPicButton, inputsWrapper} = createUseStyles(styles)()
+  let fileInput: HTMLInputElement
+
+  function setFileInput(input: HTMLInputElement) {
+    fileInput = input
+  }
 
   const uploadContextWithReducer = useContext(UploadContext)
 
   if (uploadContextWithReducer === undefined) throw new Error('Context must be provided')
   const { state: uploadState, setState: setUploadState } = uploadContextWithReducer
+  const { picture } = uploadState.artist
 
   const [started, setStarted] = useState(1850)
   const [ended, setEnded] = useState((new Date()).getFullYear())
 
   return <div className={container}>
     <div className={viewHeader}>
-      <p>CREATE NEW ARTIST PROFILE</p>
+      <p>create new artist profile</p>
     </div>
     <div className={viewHeaderDesc}>
       <p>Just some info about new artistic persona. You can also add link to your social media account.</p>
     </div>
     <div className={artistPicUpload}>
-      <div className={artistPic}>
-        <img src="xd.jpeg" alt="Artist picture"/>
-      </div>
-      <Button className={loadPicButton} size='s'>LOAD PICTURE</Button>
+      {
+        picture && <img className={artistPic} src={picture} alt='artwork'/>
+      }
+      <Button
+        size='s'
+        className={loadPicButton}
+        onClick={() => {
+          fileInput.click()
+        }}
+        >LOAD PICTURE
+      </Button>
+      <input
+        hidden
+        ref={setFileInput}
+        accept='image/*'
+        type="file"
+        onChange={({ target }) => {
+          const { files } = target
+          if (!files) return
+          files[0].arrayBuffer().then(ab => {
+            setUploadState(state => ({
+              ...state,
+              artist: {
+                ...state.artist,
+                picture: URL.createObjectURL(new Blob([ab] ))
+              }
+            }))
+          })
+        }}
+      />
     </div>
     <div className={inputsWrapper}>
       <Input

@@ -13,7 +13,8 @@ import {v4 as uuid} from "uuid";
 import {css} from "@emotion/core";
 import {MoonLoader} from "react-spinners";
 import theme from "../../Theme";
-import MainDB, {IAlbum, IArtist} from "../../MainDB";
+import MainDB, {IAlbum, IArtist, IBinaryData, IBinaryMetadata, ITrack} from "../../MainDB";
+import {getBinaryFileHash} from "../../lib";
 
 /**
  * Handle whole logic regarding
@@ -67,7 +68,6 @@ export default function Upload() {
 
   async function insertToDB(filesProcessing: Array<FileProcessing>) {
     const userID = localStorage.getItem('id') || ''
-    const albumID = uuid()
     const { album, artist } = uploadState
     const db = new MainDB()
 
@@ -75,20 +75,48 @@ export default function Upload() {
       .where(["owner", "name"])
       .equals([artist.owner, artist.name])
       .last()
-      .catch(console.error)|| { albums: [] }
+      .catch(console.error) || { albums: [] }
 
-    const tracksBinaries = filesProcessing.map(({webMFile, hash}) => ({
-        binary: webMFile as ArrayBuffer, hash, id: uuid()
+    const audioBinaryTracks: Array<IBinaryData> = filesProcessing.map(({webMFile, hash}) => ({
+        binary: webMFile as ArrayBuffer, hash
     }))
-    const tracks = filesProcessing.map(({hash, name, duration}) => ({
-      name, albumID, hash, length: duration, id: uuid(), broadcasters: [userID]
+
+    const tracks: Array<ITrack> = filesProcessing.map(({hash, name, duration}) => ({
+      name, hash, length: duration, id: uuid()
     }))
+
+    const metaTracks: Array<IBinaryMetadata> = filesProcessing.map(({hash, name, duration}) => ({
+      hash, seeders: [userID]
+    }))
+
+    let pictureHash = ''
+    let artworkHash = ''
+    let picture: ArrayBuffer|undefined
+    let artwork: ArrayBuffer|undefined
+    const pictures: Array<IBinaryData> = []
+
+    if (artist.picture) {
+      picture = await getArtistPicture(artist.picture)
+      pictureHash = await getBinaryFileHash(picture)
+
+      pictures.push({ binary: picture, hash: pictureHash })
+    }
+
+    if (album.artwork) {
+      artwork = await getArtistPicture(album.artwork);
+      artworkHash = await getBinaryFileHash(artwork);
+
+      pictures.push({ binary: artwork, hash: artworkHash })
+    }
+
     const newAlbum: IAlbum = {
       name: album.name,
       type: album.type,
       tracks,
-      releaseDate: album.releaseDate.toLocaleDateString()
+      releaseDate: album.releaseDate.toLocaleDateString(),
+      artworkHash
     }
+
     const newArtist: IArtist = {
       albums: [...artistExistingAlbums, newAlbum],
       ended: artist.ended,
@@ -97,14 +125,32 @@ export default function Upload() {
       origin: artist.origin,
       started: artist.started,
       owner: userID,
-      // TODO: Pictures
-      picture: '',
-      link: artist.link?.toString()
+      link: artist.link?.toString(),
+      pictureHash
     }
 
-    Promise.all(tracksBinaries.map(trackBinary => db.binaryTracks.add(trackBinary)))
-      .then(console.info)
-      .catch(console.error)
+    const binaryMetadata: Array<IBinaryMetadata> = [
+      ...pictures.map(({ hash }) => ({ hash, seeders: [userID] })),
+      ...metaTracks
+    ]
+
+    db.binaryMetadata.bulkAdd(binaryMetadata).then(res => {
+      console.log(`%c ${res}`, 'color: green')
+    }).catch(err => {
+      console.log(`%c ${err}`, 'color: red')
+    })
+
+    db.binaryData.bulkAdd(audioBinaryTracks).then(res => {
+      console.log(`%c ${res}`, 'color: green')
+    }).catch(err => {
+      console.log(`%c ${err}`, 'color: red')
+    })
+
+    db.binaryData.bulkAdd(pictures).then(res => {
+      console.log(`%c ${res}`, 'color: green')
+    }).catch(err => {
+      console.log(`%c ${err}`, 'color: red')
+    })
 
     db.artists
       .where(["owner", "name"])
@@ -115,6 +161,11 @@ export default function Upload() {
           .then(console.info)
           .catch(console.error)
       })
+
+    async function getArtistPicture(URL: string) {
+      const response = await fetch(URL)
+      return await response.arrayBuffer()
+    }
   }
 
   // TODO: Refactor it plsss :ccccc
@@ -154,13 +205,12 @@ export default function Upload() {
         setUploadState(state as Upload)
       }
     } }}>
+    <TopBar
+      title='Upload'
+      buttons={ renderButtons(pathname) }
+    />
     <div className={container}>
       {processingInProgress ? <ProcessingModal /> : null}
-      <TopBar
-        title='Upload'
-        buttons={ renderButtons(pathname) }
-      />
-
       <Switch>
         <Route path='/upload/create-artist-profile'>
           <CreateArtistProfile />
@@ -195,10 +245,8 @@ export default function Upload() {
 
     async function handleSuccess(fileProcessing: FileProcessing, webM: ArrayBuffer) {
       const {mp3File} = fileProcessing
-      const hash = await crypto.subtle.digest('sha-256', mp3File as ArrayBuffer)
 
-      const hashArray = Array.from(new Uint8Array(hash));
-      const hashString = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const hash = await getBinaryFileHash(mp3File as ArrayBuffer)
 
       setUploadState(uploadState => ({
         ...uploadState,
@@ -207,7 +255,7 @@ export default function Upload() {
           else {
             return {
               ...fileProcessing,
-              hash: hashString,
+              hash,
               webMFile: webM,
               processingSuccessful: true,
               processingInProgress: false
