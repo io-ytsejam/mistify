@@ -4,17 +4,15 @@ import Button from "../../Button";
 import TopBar from "../../TopBar";
 import ChooseArtist from "../ChooseArtist";
 import CreateArtistProfile from "../CreateArtistProfile";
-import {Route, Switch, useHistory} from "react-router-dom";
+import {Redirect, Route, Switch, useHistory} from "react-router-dom";
 import UploadDetails from "../UploadDetails";
 import AddTracks from "../AddTracks";
 import Summary from "../Summary";
 import queueProcessing from "../prepareWebM";
-import {v4 as uuid} from "uuid";
-import {css} from "@emotion/core";
-import {MoonLoader} from "react-spinners";
-import theme from "../../Theme";
 import MainDB, {IAlbum, IArtist, IBinaryData, IBinaryMetadata, ITrack} from "../../MainDB";
 import {getBinaryFileHash} from "../../lib";
+import Popup from "../../Popup";
+import ProcessingInProgress from "../ProcessingInProgress";
 
 /**
  * Handle whole logic regarding
@@ -23,11 +21,30 @@ import {getBinaryFileHash} from "../../lib";
 
 
 const contextValue: Upload = {
-  artist: { name: '', origin: '', genre: '', started: 1900, owner: localStorage.getItem('id') || '' },
-  album: { name: '', type: 'lp', releaseDate: new Date(), artwork: '' },
+  artist: {
+    name: '',
+    origin: '',
+    genre: '',
+    started: 1900,
+    owner: localStorage.getItem('id') || ''
+  },
+  album: {
+    name: '',
+    type: 'lp',
+    releaseDate: new Date(),
+    artwork: ''
+  },
   validation: {
     artist: {
-      name: false, started: false, genre: false, origin: false
+      name: false,
+      started: false,
+      genre: false,
+      origin: false
+    },
+    album: {
+      name: false,
+      type: true, // Default dropdown value
+      releaseDate: true // Today date is default
     }
   }
 }
@@ -43,20 +60,27 @@ export default function Upload() {
     }
   }
 
-  const [uploadState, setUploadState] = useState(contextValue)
-  const { filesProcessing } = uploadState
   const history = useHistory()
+  const [uploadState, setUploadState] = useState(contextValue)
+  const [validationState, setValidationState] = useState<string>()
   const [pathname, setPathname] = useState(history.location.pathname)
   const [processingInProgress, setProcessingInProgress] = useState(false)
-  const {container} = createUseStyles(styles)()
+  const [processingEnded, setProcessingEnded] = useState(false)
+  const { filesProcessing } = uploadState
+  const { container } = createUseStyles(styles)()
 
-  history.listen(({pathname}) => {
+  history.listen(({ pathname }) => {
     setPathname(pathname)
   })
 
-  useEffect(function () {
+  useEffect(handleProcessing, [filesProcessing, processingInProgress])
+
+  function handleProcessing () {
     if (processingInProgress && filesProcessing?.every(({processingSuccessful}) => processingSuccessful)) {
-      insertToDB(filesProcessing)
+      const db = new MainDB()
+
+      db.addProcessedMusic(filesProcessing, uploadState)
+        .then(() => setProcessingEnded(true))
       return setProcessingInProgress(false)
     }
     if (processingInProgress) return
@@ -64,137 +88,19 @@ export default function Upload() {
 
     startProcessing()
     setProcessingInProgress(true)
-  }, [filesProcessing, processingInProgress])
-
-  async function insertToDB(filesProcessing: Array<FileProcessing>) {
-    const userID = localStorage.getItem('id') || ''
-    const { album, artist } = uploadState
-    const db = new MainDB()
-
-    const { albums: artistExistingAlbums } = await db.artists
-      .where(["owner", "name"])
-      .equals([artist.owner, artist.name])
-      .last()
-      .catch(console.error) || { albums: [] }
-
-    const audioBinaryTracks: Array<IBinaryData> = filesProcessing.map(({webMFile, hash}) => ({
-        binary: webMFile as ArrayBuffer, hash
-    }))
-
-    const tracks: Array<ITrack> = filesProcessing.map(({hash, name, duration}) => ({
-      name, hash, length: duration, id: uuid()
-    }))
-
-    const metaTracks: Array<IBinaryMetadata> = filesProcessing.map(({hash, name, duration}) => ({
-      hash, seeders: [userID]
-    }))
-
-    let pictureHash = ''
-    let artworkHash = ''
-    let picture: ArrayBuffer|undefined
-    let artwork: ArrayBuffer|undefined
-    const pictures: Array<IBinaryData> = []
-
-    if (artist.picture) {
-      picture = await getArtistPicture(await artist.picture)
-      pictureHash = await getBinaryFileHash(picture)
-
-      pictures.push({ binary: picture, hash: pictureHash })
-    }
-
-    if (album.artwork) {
-      artwork = await getArtistPicture(await album.artwork);
-      artworkHash = await getBinaryFileHash(artwork);
-
-      pictures.push({ binary: artwork, hash: artworkHash })
-    }
-
-    const newAlbum: IAlbum = {
-      name: album.name,
-      type: album.type,
-      tracks,
-      releaseDate: album.releaseDate.toLocaleDateString(),
-      artworkHash
-    }
-
-    const newArtist: IArtist = {
-      albums: [...artistExistingAlbums, newAlbum],
-      ended: artist.ended,
-      genre: artist.genre,
-      name: artist.name,
-      origin: artist.origin,
-      started: artist.started,
-      owner: userID,
-      link: artist.link?.toString(),
-      pictureHash
-    }
-
-    const binaryMetadata: Array<IBinaryMetadata> = [
-      ...pictures.map(({ hash }) => ({ hash, seeders: [userID] })),
-      ...metaTracks
-    ]
-
-    db.binaryMetadata.bulkAdd(binaryMetadata).then(res => {
-      console.log(`%c ${res}`, 'color: green')
-    }).catch(err => {
-      console.log(`%c ${err}`, 'color: red')
-    })
-
-    db.binaryData.bulkAdd(audioBinaryTracks).then(res => {
-      console.log(`%c ${res}`, 'color: green')
-    }).catch(err => {
-      console.log(`%c ${err}`, 'color: red')
-    })
-
-    db.binaryData.bulkAdd(pictures).then(res => {
-      console.log(`%c ${res}`, 'color: green')
-    }).catch(err => {
-      console.log(`%c ${err}`, 'color: red')
-    })
-
-    db.artists
-      .where(["owner", "name"])
-      .equals([artist.owner, artist.name])
-      .delete()
-      .finally(() => {
-        db.artists.add(newArtist)
-          .then(console.info)
-          .catch(console.error)
-      })
-
-    async function getArtistPicture(URL: string) {
-      const response = await fetch(URL)
-      return await response.arrayBuffer()
-    }
   }
 
-  // TODO: Refactor it plsss :ccccc
-  function ProcessingModal() {
-    return <div style={{
-      position: 'absolute',
-      height: '100vh',
-      width: '100vw',
-      top: 0,
-      left: 0,
-      backdropFilter: 'blur(1rem)',
-      zIndex: 2,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div>Processing in progress</div>
-      <MoonLoader
-        loading={processingInProgress}
-        color={theme.colors.primary}
-        size={50}
-        css={css`margin-right: 1rem;`}
-      />
-      <p>
-        {filesProcessing?.filter(({processingSuccessful}) => processingSuccessful).length} /
-        {filesProcessing?.length}
-      </p>
-    </div>
+  function isAlbumValid() {
+    return Object.entries(uploadState.validation.album).every(([_, v]) => v)
+  }
+
+  function isArtistValid() {
+    return Object.entries(uploadState.validation.artist).every(([_, v]) => v)
+  }
+
+  function areTracksValid() {
+    if (!filesProcessing) return false
+    return Object.entries(filesProcessing).every(([_, fp]) => fp.mp3File && fp.name)
   }
 
   return <UploadContext.Provider value={{ state: uploadState, setState (state) {
@@ -205,24 +111,46 @@ export default function Upload() {
         setUploadState(state as Upload)
       }
     } }}>
+    {processingEnded && <Popup
+        okAction={() => {
+          setProcessingEnded(false)
+          history.push('/library')
+        }}
+        message='Processing ended. If everything went well,
+         your music should be visible in library'
+    />
+    }
+    {validationState &&
+      <Popup
+        okAction={() => setValidationState(undefined)}
+        message={validationState}
+      />
+    }
     <TopBar
       title='Upload'
       buttons={ renderButtons(pathname) }
     />
     <div className={container}>
-      {processingInProgress ? <ProcessingModal /> : null}
+      {processingInProgress && filesProcessing
+        ? <ProcessingInProgress filesProcessing={filesProcessing} /> : null}
       <Switch>
         <Route path='/upload/create-artist-profile'>
           <CreateArtistProfile />
         </Route>
         <Route path='/upload/details'>
           <UploadDetails />
+          {!isArtistValid() && <Redirect to='/upload' />}
         </Route>
         <Route path='/upload/add-tracks'>
           <AddTracks />
+          {!isArtistValid() && <Redirect to='/upload' />}
+          {!isAlbumValid() && <Redirect to='/upload' />}
         </Route>
         <Route path='/upload/summary'>
           <Summary />
+          {!isArtistValid() && <Redirect to='/upload' />}
+          {!isArtistValid() && <Redirect to='/upload' />}
+          {!areTracksValid() && <Redirect to='/upload' />}
         </Route>
         <Route path='/'>
           <ChooseArtist/>
@@ -288,10 +216,16 @@ export default function Upload() {
         onClick={() => {
           const { artist } = uploadState.validation || {}
           if (!artist) return
-          if (!Object
-            .entries(artist)
-            .map(([_, a]) => a)
-            .every(v => v)) return
+          if (!isArtistValid()) {
+            return setValidationState(
+              `Fields ${!artist.name ? 'Artist name, ' : ''}
+              ${!artist.genre ? 'Genre, ' : ''}
+              ${!artist.origin ? 'Origin, ' : ''}
+              ${!artist.started ? 'Started, ' : ''}`
+                .replace(/..$/," ")
+                .concat('cannot be empty')
+            )
+          }
           history.push('/upload/details')
         }}
       >DETAILS</Button>
@@ -306,6 +240,17 @@ export default function Upload() {
       <Button
         size='s'
         onClick={() => {
+          const { album } = uploadState.validation || {}
+          if (!album) return
+          if (!isAlbumValid()) {
+            return setValidationState(
+              `Fields ${!album.name ? 'Name, ' : ''}
+              ${!album.type ? 'Album type, ' : ''}
+              ${!album.releaseDate ? 'Release date, ' : ''}`
+                .replace(/..$/," ")
+                .concat('cannot be empty')
+            )
+          }
           history.push('/upload/add-tracks')
         }}
       >ADD TRACKS</Button>
@@ -320,6 +265,8 @@ export default function Upload() {
       <Button
         size='s'
         onClick={() => {
+          if (!areTracksValid())
+            return setValidationState('You need to add some MP3 files and name them')
           history.push('/upload/summary')
         }}
       >SUMMARY</Button>

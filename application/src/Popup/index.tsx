@@ -2,12 +2,22 @@ import ReactDOM from "react-dom";
 import {createUseStyles} from "react-jss";
 import theme from "../Theme";
 
-interface PopupProps {
+interface ErrorBoundaryPopupProps {
   error: any
   resetErrorBoundary: any
 }
 
-export default function Popup ({ resetErrorBoundary }: PopupProps) {
+interface PopupProps {
+  okAction: (any: any) => void
+  message: string
+}
+
+export function ErrorBoundaryPopup({ resetErrorBoundary, error }: ErrorBoundaryPopupProps) {
+  return <Popup okAction={resetErrorBoundary} message={error.message} />
+}
+
+
+export default function Popup ({ message, okAction }: PopupProps) {
   const root = document.querySelector('#root')
   const { wrapper, messageContainer, action, container } = useStyles()
   if (!root) return null
@@ -18,10 +28,10 @@ export default function Popup ({ resetErrorBoundary }: PopupProps) {
       <div className={container}>
         <div className={messageContainer}>
           <p>
-            This track is not available right now. Try again later.
+            {message}
           </p>
         </div>
-        <div className={action} onClick={resetErrorBoundary}>
+        <div className={action} onClick={okAction}>
           OK
         </div>
       </div>
@@ -39,7 +49,8 @@ const useStyles = createUseStyles({
     display: "flex",
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: "column"
+    flexDirection: "column",
+    transition: '.4s ease backdropFilter'
   },
   messageContainer: {
     maxWidth: '13.5rem',

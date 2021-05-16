@@ -8,7 +8,7 @@ import SkipPrevious from "@material-ui/icons/SkipPrevious";
 import SkipNext from "@material-ui/icons/SkipNext";
 import { requestTrackStream } from "../RTC";
 import {ErrorBoundary} from "react-error-boundary";
-import Popup from "../Popup";
+import Popup, {ErrorBoundaryPopup} from "../Popup";
 import theme from "../Theme";
 import {prepareOnPanelMouseDown, prepareOnPanelTouchStart} from "./PanelEvents";
 
@@ -37,11 +37,16 @@ export default function Player() {
 
   if (!queue.length) return null
 
+  function ErrComp() {
+    if (error) throw new Error(error.message)
+    return <div/>
+  }
+
   return <ErrorBoundary
-    FallbackComponent={Popup}
+    FallbackComponent={ErrorBoundaryPopup}
     onReset={() => setError(undefined)}
   >
-    {error ? <>{error}</> : null}
+    {error ? <ErrComp /> : null}
     <div className={wrapper}>
       <div
         ref={setPanel}

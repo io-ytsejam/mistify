@@ -49,6 +49,11 @@ type Upload = {
       genre: boolean
       origin: boolean
       started: boolean
+    },
+    album: {
+      name: boolean
+      type: boolean
+      releaseDate: boolean
     }
   }
 }

@@ -1,16 +1,19 @@
 import {createUseStyles} from "react-jss";
 import theme from "../../Theme";
 import Button from "../../Button";
-import {useContext} from "react";
+import React, {useContext} from "react";
 import TrackUpload from "../TrackUpload";
 import {UploadContext} from "../Upload";
+import {Redirect} from "react-router-dom";
 
 export default function AddTracks () {
   const {container, viewHeader, viewHeaderDesc,
     inputsWrapper } = useStyles()
 
   const { state: uploadState, setState: setUploadState } = useContext(UploadContext) as UploadContextType
-  const {filesProcessing} = uploadState
+  const { filesProcessing, album, validation } = uploadState
+  const { name } = album
+  const { artist: artistValidation, album: albumValidation } = validation
 
   return <div className={container}>
     <div className={viewHeader}>
@@ -18,9 +21,8 @@ export default function AddTracks () {
     </div>
     <div className={viewHeaderDesc}>
       <p>
-        Add all tracks for UPLOAD_NAME. Files should be in WebM format with Opus audio or just regular MP3 format.
-        Be aware that adding MP3 files takes more time. If files don’t have name in tags, you should also specify them
-        by yourself.
+        Add all tracks for {name}. Files should be in regular MP3 format.
+        If files don’t have name in tags, you should also specify them
       </p>
     </div>
     <div className={inputsWrapper}>
@@ -86,7 +88,7 @@ const useStyles = createUseStyles({
     textTransform: 'uppercase'
   },
   viewHeaderDesc: {
-    fontSize: '.625rem'
+    fontSize: '.8125rem'
   },
   inputsWrapper: {
     display: 'grid',

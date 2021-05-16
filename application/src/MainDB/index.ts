@@ -1,4 +1,6 @@
 import Dexie from "dexie";
+import {v4 as uuid} from "uuid";
+import {getBinaryFileHash} from "../lib";
 
 const userID = localStorage.getItem('id') || ''
 
@@ -11,6 +13,7 @@ export default class MainDB extends Dexie {
   getOwnArtistsCount: () => Promise<number>
   getArtistsCount: () => Promise<number>
   removeSeederForGivenData: (dataHash: string, seeder: string) => Promise<void>
+  addProcessedMusic: (filesProcessing: Array<FileProcessing>, upload: Upload) => Promise<void>
 
   constructor () {
     super("MainDB");
@@ -48,6 +51,107 @@ export default class MainDB extends Dexie {
             seeders: [...meta?.seeders.filter(hash => hash !== seederToRemove)]
           } as IBinaryMetadata).then(res => {
         })
+      }
+    }
+    this.addProcessedMusic = async function (filesProcessing: Array<FileProcessing>, upload: Upload) {
+      const userID = localStorage.getItem('id') || ''
+      const { album, artist } = upload
+      const db = new MainDB()
+
+      const { albums: artistExistingAlbums } = await db.artists
+        .where(["owner", "name"])
+        .equals([artist.owner, artist.name])
+        .last()
+        .catch(console.error) || { albums: [] }
+
+      const audioBinaryTracks: Array<IBinaryData> = filesProcessing.map(({webMFile, hash}) => ({
+        binary: webMFile as ArrayBuffer, hash
+      }))
+
+      const tracks: Array<ITrack> = filesProcessing.map(({hash, name, duration}) => ({
+        name, hash, length: duration, id: uuid()
+      }))
+
+      const metaTracks: Array<IBinaryMetadata> = filesProcessing.map(({hash, name, duration}) => ({
+        hash, seeders: [userID]
+      }))
+
+      let pictureHash = ''
+      let artworkHash = ''
+      let picture: ArrayBuffer|undefined
+      let artwork: ArrayBuffer|undefined
+      const pictures: Array<IBinaryData> = []
+
+      if (artist.picture) {
+        picture = await getArtistPicture(artist.picture)
+        pictureHash = await getBinaryFileHash(picture)
+
+        pictures.push({ binary: picture, hash: pictureHash })
+      }
+
+      if (album.artwork) {
+        artwork = await getArtistPicture(album.artwork);
+        artworkHash = await getBinaryFileHash(artwork);
+
+        pictures.push({ binary: artwork, hash: artworkHash })
+      }
+
+      const newAlbum: IAlbum = {
+        name: album.name,
+        type: album.type,
+        tracks,
+        releaseDate: album.releaseDate.toLocaleDateString(),
+        artworkHash
+      }
+
+      const newArtist: IArtist = {
+        albums: [...artistExistingAlbums, newAlbum],
+        ended: artist.ended,
+        genre: artist.genre,
+        name: artist.name,
+        origin: artist.origin,
+        started: artist.started,
+        owner: userID,
+        link: artist.link?.toString(),
+        pictureHash
+      }
+
+      const binaryMetadata: Array<IBinaryMetadata> = [
+        ...pictures.map(({ hash }) => ({ hash, seeders: [userID] })),
+        ...metaTracks
+      ]
+
+      db.binaryMetadata.bulkAdd(binaryMetadata).then(res => {
+        console.log(`%c ${res}`, 'color: green')
+      }).catch(err => {
+        console.log(`%c ${err}`, 'color: red')
+      })
+
+      db.binaryData.bulkAdd(audioBinaryTracks).then(res => {
+        console.log(`%c ${res}`, 'color: green')
+      }).catch(err => {
+        console.log(`%c ${err}`, 'color: red')
+      })
+
+      db.binaryData.bulkAdd(pictures).then(res => {
+        console.log(`%c ${res}`, 'color: green')
+      }).catch(err => {
+        console.log(`%c ${err}`, 'color: red')
+      })
+
+      db.artists
+        .where(["owner", "name"])
+        .equals([artist.owner, artist.name])
+        .delete()
+        .finally(() => {
+          db.artists.add(newArtist)
+            .then(console.info)
+            .catch(console.error)
+        })
+
+      async function getArtistPicture(URL: string) {
+        const response = await fetch(URL)
+        return await response.arrayBuffer()
       }
     }
   }

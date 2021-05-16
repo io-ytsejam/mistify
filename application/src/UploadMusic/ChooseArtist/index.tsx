@@ -61,6 +61,12 @@ export default function ChooseArtist() {
         artist: {
           ...uploadState.artist,
           ...artist
+        },
+        validation: {
+          ...uploadState.validation,
+          artist: {
+            name: true, started: true, origin: true, genre: true
+          }
         }
       }))
 
@@ -84,7 +90,7 @@ const styles: Styles = {
     margin: '.5rem 0'
   },
   viewHeaderDesc: {
-    fontSize: '.625rem',
+    fontSize: '.8125rem',
     margin: '.5rem 0'
   },
   chooseArtistButton: {

@@ -66,34 +66,34 @@ export default function CreateArtistProfile () {
     <div className={inputsWrapper}>
       <Input
         onChange={handleNameChange}
-        onBlur={({target}) => setTimeout(() => target.reportValidity(), 500)}
+        // onBlur={({target}) => setTimeout(() => target.reportValidity(), 500)}
         value={uploadState.artist.name}
-        placeholder='Artist name'
+        placeholder='Artist name*'
         required
       />
       <Input
         onChange={handleGenreChange}
-        onBlur={({target}) => target.reportValidity()}
+        // onBlur={({target}) => target.reportValidity()}
         value={uploadState.artist.genre}
-        placeholder='Genre'
+        placeholder='Genre*'
         required
       />
       <Input
-        placeholder='Origin'
+        placeholder='Origin*'
         onChange={handleOriginChange}
-        onBlur={({target}) => target.reportValidity()}
+        // onBlur={({target}) => target.reportValidity()}
         value={uploadState.artist.origin}
         required
       />
       <div style={{display: 'flex', justifyContent: 'space-between'}}>
         <Input
           onChange={handleStartedChange}
-          onBlur={({target}) => target.reportValidity()}
+          // onBlur={({target}) => target.reportValidity()}
           value={uploadState.artist.started}
           min={1850}
           type='number'
           style={{ width: 'calc(50% - .5rem)' }} 
-          placeholder='Started'
+          placeholder='Started*'
           required
         />
         <Input
@@ -216,7 +216,7 @@ const styles: Styles = {
     textTransform: 'uppercase'
   },
   viewHeaderDesc: {
-    fontSize: '.625rem'
+    fontSize: '.8125rem'
   },
   artistPic,
   artistPicUpload: {

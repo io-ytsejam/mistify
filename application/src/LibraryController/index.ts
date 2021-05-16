@@ -6,6 +6,7 @@ import lodash from 'lodash';
 import deepEqual from "deep-equal";
 
 const db = new MainDB()
+const userID = localStorage.getItem('id') || ''
 
 /** Send library to all peers. Be aware that library consists
  *  only information about music, not binary tracks */
@@ -107,6 +108,7 @@ export async function addDataSeeder(dataHash: string, seeder: string) {
   const data = await db.binaryMetadata.filter(({ hash }) => hash === dataHash).last()
 
   if (!data) return
+  if (data.seeders.some(seeder => seeder === userID)) return
 
   const updatedData = {
     ...data,

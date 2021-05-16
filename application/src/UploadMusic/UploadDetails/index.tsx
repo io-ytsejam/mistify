@@ -1,19 +1,19 @@
 import theme from "../../Theme";
-import {createUseStyles, Styles} from "react-jss";
+import { createUseStyles } from "react-jss";
 import Button from "../../Button";
-import React, {useContext, useState} from "react";
-import {artistPic} from "../../ArtistPanel";
+import React, { useContext } from "react";
 import Input from "../../Input";
-import {UploadContext} from "../Upload";
+import { UploadContext } from "../Upload";
 
 export default function UploadDetails () {
-  const [artwork, setArtwork] = useState('')
   const { container, viewHeader, viewHeaderDesc,
     albumPic, albumPicUpload, loadPictureButtonHelperText,
     buttonWrapper, inputsWrapper } = useStyles()
   const uploadContextWithReducer = useContext(UploadContext)
   if (uploadContextWithReducer === undefined) throw new Error('Context must be provided')
   const { state: uploadState, setState: setUploadState } = uploadContextWithReducer
+  const { album } = uploadState
+  const { artwork } = album
   let fileInput: HTMLInputElement
 
   function setFileInput(input: HTMLInputElement) {
@@ -60,33 +60,50 @@ export default function UploadDetails () {
     </div>
     <div className={inputsWrapper}>
       <Input
-        placeholder='Name'
+        required
+        placeholder='Name*'
         onChange={handleNameChange}
         value={uploadState.album.name}
       />
       <select
+        required
         onChange={handleTypeChange}
         value={uploadState.album.type}
+        placeholder='Album type*'
       >
         <option value="lp">LP</option>
         <option value="ep">EP</option>
         <option value="single">Single</option>
       </select>
       <Input
+        required
         type='date'
-        placeholder='Release date'
+        placeholder='Release date*'
         onChange={handleReleaseDateChange}
-        value={uploadState.album.releaseDate.toLocaleDateString().split('.').reverse().join('-')}
+        value={
+          uploadState.album.releaseDate
+            .toLocaleDateString()
+            .split('.')
+            .reverse()
+            .map(part => part.length === 1 ? '0' + part : part)
+            .join('-')}
       />
     </div>
   </div>
 
-  function handleNameChange({target}: React.ChangeEvent<HTMLInputElement>) {
+  function handleNameChange({ target }: React.ChangeEvent<HTMLInputElement>) {
     setUploadState({
       ...uploadState,
       album: {
         ...uploadState.album,
         name: target.value
+      },
+      validation: {
+        ...uploadState.validation,
+        album: {
+          ...uploadState.validation.album,
+          name: target.checkValidity()
+        }
       }
     })
   }
@@ -97,6 +114,13 @@ export default function UploadDetails () {
       album: {
         ...uploadState.album,
         type: target.value as 'lp'|'ep'|'single'
+      },
+      validation: {
+        ...uploadState.validation,
+        album: {
+          ...uploadState.validation.album,
+          type: target.checkValidity()
+        }
       }
     })
   }
@@ -107,6 +131,13 @@ export default function UploadDetails () {
       album: {
         ...uploadState.album,
         releaseDate: new Date(target.value)
+      },
+      validation: {
+        ...uploadState.validation,
+        album: {
+          ...uploadState.validation.album,
+          releaseDate: target.checkValidity()
+        }
       }
     })
   }
@@ -131,7 +162,7 @@ const useStyles = createUseStyles({
     textTransform: 'uppercase'
   },
   viewHeaderDesc: {
-    fontSize: '.625rem'
+    fontSize: '.8125rem'
   },
   albumPic: {
     width: '10rem',

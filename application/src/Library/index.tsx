@@ -12,6 +12,7 @@ import { mapIArtistsOnArtists } from "../lib";
 import ArtistsView from "./ArtistsView";
 import ContentLoader from "react-content-loader";
 import ListOfArtistsLoading from "../ArtistPanel/ListOfArtistsLoading";
+import ProcessingInProgress from "../UploadMusic/ProcessingInProgress";
 
 export default function Library() {
   const history = useHistory()
@@ -29,6 +30,15 @@ export default function Library() {
   const buttonTitle = getTitle()
 
   return <>
+    {/*return <ProcessingInProgress
+      filesProcessing={[
+        { processingSuccessful: true, name: 'Nothing else matters', duration: 0, hash: '', processingInProgress: true, processingFailure: undefined, mp3File: null, webMFile: null },
+        { processingSuccessful: true, name: 'Master of puppets', duration: 0, hash: '', processingInProgress: true, processingFailure: undefined, mp3File: null, webMFile: null },
+        { processingSuccessful: false, name: 'Battery', duration: 0, hash: '', processingInProgress: true, processingFailure: undefined, mp3File: null, webMFile: null },
+        { processingSuccessful: false, name: 'Orion', duration: 0, hash: '', processingInProgress: true, processingFailure: undefined, mp3File: null, webMFile: null },
+        { processingSuccessful: false, name: 'Leper messiah', duration: 0, hash: '', processingInProgress: true, processingFailure: undefined, mp3File: null, webMFile: null },
+        { processingSuccessful: false, name: 'Welcome home', duration: 0, hash: '', processingInProgress: true, processingFailure: undefined, mp3File: null, webMFile: null },
+      ]} />*/}
     <TopBar
       title={viewArtist && location.pathname.match(/view-(artist|album)/) ?
         viewArtist.name : 'Library'}

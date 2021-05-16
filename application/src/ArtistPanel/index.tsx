@@ -36,7 +36,6 @@ export default function ArtistPanel ({ children, artist, onClick }: ArtistPanelP
 
 const artistPic: Styles = {
   maxWidth: '9rem',
-  boxShadow: '0 0 .5rem black',
   '& img': {
     width: '100%',
     marginBottom: '-.25rem'
@@ -71,12 +70,14 @@ const styles: Styles = {
     position: 'relative'
   },
   artistPicContainer: {
+    overflow: 'hidden',
     height: '5rem',
     width: '9rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-around',
-    alignItems: 'center'
+    alignItems: 'center',
+    boxShadow: '0 0 .5rem black',
   }
 }
 

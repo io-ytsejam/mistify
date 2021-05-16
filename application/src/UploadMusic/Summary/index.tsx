@@ -91,7 +91,7 @@ const useStyles = createUseStyles({
     textTransform: 'uppercase'
   },
   viewHeaderDesc: {
-    fontSize: '.625rem'
+    fontSize: '.8125rem'
   },
   albumPic: {
     width: '10rem',
