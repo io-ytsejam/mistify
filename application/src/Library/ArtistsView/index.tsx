@@ -1,4 +1,6 @@
 import ArtistPanel from "../../ArtistPanel";
+import ContentLoader from "react-content-loader";
+import React from "react";
 
 interface ArtistsViewProps {
   artists: Artist[]

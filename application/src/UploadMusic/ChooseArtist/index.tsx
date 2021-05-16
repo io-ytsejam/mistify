@@ -3,19 +3,21 @@ import React, {useContext, useEffect, useState} from "react";
 import theme from "../../Theme";
 import ArtistPanel from "../../ArtistPanel";
 import Button from "../../Button";
-import MainDB, {IArtist} from "../../MainDB";
+import MainDB from "../../MainDB";
 import {useHistory} from "react-router-dom";
 import {UploadContext} from "../Upload";
-import {requestBinaryData} from "../../RTC";
-import {getArtistPictureURL, mapIArtistsOnArtists} from "../../lib";
+import { mapIArtistsOnArtists} from "../../lib";
+import ListOfArtistsLoading from "../../ArtistPanel/ListOfArtistsLoading";
 
 export default function ChooseArtist() {
   const history = useHistory()
+  const [ownedArtistsCount, setOwnedArtistsCount] = useState<number>()
   const { state: uploadState, setState: setUploadState } = useContext(UploadContext) as UploadContextType
   const { viewHeader, viewHeaderDesc, container, chooseArtistButton, noArtistsText } = createUseStyles(styles)()
   const db = new MainDB()
   const [artists, setArtists] = useState<Array<Artist>>()
 
+  db.getOwnArtistsCount().then(setOwnedArtistsCount)
 
   useEffect(function () {
     const userID = localStorage.getItem('id')
@@ -35,9 +37,7 @@ export default function ChooseArtist() {
       <p>Who are you right now? Choose artist name associated with tracks you want to add. You can also create new identity.</p>
     </div>
     <div>
-      {!artists?.length ?
-        <p className={noArtistsText}>No artists yet. Create new One!</p> : null}
-      {artists?.map((artist, i) =>
+      {artists && artists.length ? artists.map((artist, i) =>
         <ArtistPanel
           key={i}
           artist={artist as Artist}
@@ -48,7 +48,9 @@ export default function ChooseArtist() {
             onClick={prepareChooseArtist(artist as Artist)}
           >NEXT</Button>
         </ArtistPanel>
-      )}
+      ) : !ownedArtistsCount ?
+        <p className={noArtistsText}>No artists yet. Create new One!</p> :
+        <ListOfArtistsLoading count={ownedArtistsCount} />}
     </div>
   </div>
 

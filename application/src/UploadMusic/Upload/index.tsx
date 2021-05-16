@@ -24,7 +24,7 @@ import {getBinaryFileHash} from "../../lib";
 
 const contextValue: Upload = {
   artist: { name: '', origin: '', genre: '', started: 1900, owner: localStorage.getItem('id') || '' },
-  album: { name: '', type: 'lp', releaseDate: new Date() },
+  album: { name: '', type: 'lp', releaseDate: new Date(), artwork: '' },
   validation: {
     artist: {
       name: false, started: false, genre: false, origin: false
@@ -96,14 +96,14 @@ export default function Upload() {
     const pictures: Array<IBinaryData> = []
 
     if (artist.picture) {
-      picture = await getArtistPicture(artist.picture)
+      picture = await getArtistPicture(await artist.picture)
       pictureHash = await getBinaryFileHash(picture)
 
       pictures.push({ binary: picture, hash: pictureHash })
     }
 
     if (album.artwork) {
-      artwork = await getArtistPicture(album.artwork);
+      artwork = await getArtistPicture(await album.artwork);
       artworkHash = await getBinaryFileHash(artwork);
 
       pictures.push({ binary: artwork, hash: artworkHash })

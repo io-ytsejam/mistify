@@ -9,7 +9,7 @@ import {
   pcs
 } from "../RTC";
 
-import {handleReceivedLibrary, propagateLibrary} from "../LibraryController";
+import {handleReceivedLibrary, handleRemoveSeeder, propagateLibrary} from "../LibraryController";
 import {AppEvents, observeApp} from "../Observe";
 
 const { hostname } = window.location
@@ -36,6 +36,7 @@ function connectWithPeers(peers: Array<string>) {
 function addListeners() {
   observeApp.addEventListener(AppEvents.DATA_CHANNEL_OPEN, propagateLibrary)
   observeApp.addEventListener(AppEvents.DataChannel.RECEIVED_REMOTE_LIBRARY, handleReceivedLibrary as EventListener)
+  observeApp.addEventListener(AppEvents.DataChannel.DELETE_SEEDER, handleRemoveSeeder as EventListener)
 }
 
 /** Hook-up all logic with WebSocket */

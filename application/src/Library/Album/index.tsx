@@ -1,5 +1,5 @@
 import {createUseStyles, Styles} from "react-jss";
-import {MouseEventHandler} from "react";
+import {MouseEventHandler, useEffect, useState} from "react";
 import TopBar from "../../TopBar";
 
 interface AlbumProps {
@@ -10,7 +10,8 @@ interface AlbumProps {
 export default function Album({album, onClick}: AlbumProps) {
   const { name, releaseDate, artwork } = album
   const releaseYear = releaseDate.getFullYear()
-  const { container, year } = useStyles()
+  const { container, year, artworkUnavailable } = useStyles()
+
 
   return (
     <div
@@ -19,7 +20,10 @@ export default function Album({album, onClick}: AlbumProps) {
         onClick(album)
       }}
     >
-      <img src={artwork} alt=""/>
+      {artwork === '' ?
+        <p className={artworkUnavailable}>This artwork is not available right now</p> :
+        <img src={artwork} alt="Loading..."/>
+      }
       <p>{name}</p>
       <p className={year}>{releaseYear}</p>
     </div>)
@@ -58,5 +62,10 @@ const useStyles = createUseStyles({
   },
   title: {
 
+  },
+  artworkUnavailable: {
+    position: 'relative',
+    top: 0,
+    fontSize: '1.5rem'
   }
 })

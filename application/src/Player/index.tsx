@@ -1,5 +1,5 @@
-import {createUseStyles} from "react-jss";
-import React, {useContext, useEffect, useRef, useState} from "react";
+import { createUseStyles } from "react-jss";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {PlayerContext} from "../App";
 import Button from "../Button";
 import PlayArrow from "@material-ui/icons/PlayArrow";
@@ -7,31 +7,167 @@ import Pause from "@material-ui/icons/Pause";
 import SkipPrevious from "@material-ui/icons/SkipPrevious";
 import SkipNext from "@material-ui/icons/SkipNext";
 import { requestTrackStream } from "../RTC";
+import {ErrorBoundary} from "react-error-boundary";
+import Popup from "../Popup";
+import theme from "../Theme";
+import {prepareOnPanelMouseDown, prepareOnPanelTouchStart} from "./PanelEvents";
 
 export default function Player() {
-  let panel: HTMLDivElement
-  const [paused, setPaused] = useState(false)
+  const [panel, setPanel] = useState<HTMLDivElement|null>()
   const { setState: setPlayerState, state: playerState } = useContext(PlayerContext) as PlayerContextType
-  const { isPanelExtended, track, artist, album, queue } = playerState
-  const  { artwork } = album || {}
-  let options: IntersectionObserverInit
-  const artworks: Array<HTMLDivElement> = []
-  let artworkContainer: Element|undefined = undefined
+  const { isPanelExtended, track, artist, album, queue, artworkColor } = playerState
+
+  const [error, setError] = useState<Error>()
+  const [paused, setPaused] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
   let audioElement = useRef<HTMLAudioElement>(null)
+
+  const  { artwork } = album || {}
+  const artworks: Array<HTMLDivElement> = []
+  const { container, wrapper, handle, content,
+    audioElement: audio, audioElementOnExtendedView,
+    artwork: artworkClass, controlsContainer, artworkQueue,
+    artworkActive, dummyArtwork, miniPlayer, miniPlayerText,
+    prevNextButton
+  } = useStyles({ isPanelExtended, artworkColor })
 
   useEffect(handleNowPlayingChange, [track?.hash])
   useEffect(updateActiveArtwork, [track?.hash])
+  useEffect(handlePlayerExtension, [isPanelExtended])
+
+  if (!queue.length) return null
+
+  return <ErrorBoundary
+    FallbackComponent={Popup}
+    onReset={() => setError(undefined)}
+  >
+    {error ? <>{error}</> : null}
+    <div className={wrapper}>
+      <div
+        ref={setPanel}
+        className={container}
+        onMouseDown={panel ? prepareOnPanelMouseDown(panel) : undefined}
+        onTouchStart={panel ? prepareOnPanelTouchStart(panel) : undefined}
+      >
+        <div
+          className={handle}
+          onClick={() => setPlayerState(state => ({
+            ...state,
+            isPanelExtended: !state.queue.length ? false : !state.isPanelExtended
+          }))}
+        >
+          <div />
+          <div />
+          <div />
+        </div>
+        <div className={content}>
+          <div className={artworkQueue}>
+            {
+              queue.map(({ active }, i) =>
+                <div
+                  id={i.toString()}
+                  className={active ? artworkActive : artworkClass}
+                  key={i}
+                  ref={element => {
+                    if (element) {
+                      artworks[i] = element
+                    }
+                  }}
+                >
+                  <img src={artwork} alt=""/>
+                </div>
+              )
+            }
+            <div className={dummyArtwork} />
+          </div>
+          <h2>{track?.name || ''}</h2>
+          <h3>{album?.name || ''}</h3>
+          <h3>{artist?.name || ''}</h3>
+          <div className={controlsContainer}>
+            <Button
+              className={prevNextButton}
+              size='m'
+              variant='secondIcon'
+              onClick={playPrevInQueue}
+            >
+              <SkipPrevious />
+            </Button>
+            <Button
+              size='m'
+              variant='icon'
+              onClick={paused ?
+                () => audioElement.current?.play() :
+                () => audioElement.current?.pause()
+              }
+            >
+              {paused ? <PlayArrow /> : <Pause />}
+            </Button>
+            <Button
+              className={prevNextButton}
+              size='m'
+              variant='secondIcon'
+              onClick={playNextInQueue}
+            >
+              <SkipNext/>
+            </Button>
+          </div>
+          {!isPanelExtended && <div className={miniPlayer}>
+              <Button
+                  size='m'
+                  variant='icon'
+                  onClick={paused ?
+                    () => audioElement.current?.play() :
+                    () => audioElement.current?.pause()
+                  }
+              >
+                {paused ? <PlayArrow /> : <Pause />}
+              </Button>
+              <div className={miniPlayerText}>
+                  <p>{artist?.name}</p>
+                  <p>{track?.name}</p>
+              </div>
+              <div>
+                  <p>{getCurrentTime(currentTime)}</p>
+              </div>
+          </div>}
+          <audio
+            autoPlay
+            ref={audioElement}
+            className={isPanelExtended ? audioElementOnExtendedView : audio}
+            src={playerState.URL}
+            controls
+            onPlay={() => {
+              setPaused(false)
+              // TODO: Remove me
+              if (audioElement.current)
+                audioElement.current.volume = .2
+            }}
+            onPause={() => setPaused(true)}
+            onError={console.log}
+            onAbort={console.log}
+            onEnded={playNextInQueue}
+            onTimeUpdate={() => {
+              !isPanelExtended && setCurrentTime(audioElement.current?.currentTime || 0)
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  </ErrorBoundary>
 
   function updateActiveArtwork () {
     const artwork = queue.find(({ active }) => active)
     if (!artwork) return
-    artworks[queue.indexOf(artwork)].scrollIntoView({block: "center", inline: 'center', behavior: 'smooth'})
+    artworks[queue.indexOf(artwork)]
+      .scrollIntoView({block: "center", inline: 'center', behavior: 'smooth'})
   }
 
   function handleNowPlayingChange() {
     if (!track) return
 
-    requestTrackStream(track).then(updateState)
+    requestTrackStream(track, setError)
+      .then(updateState)
+      .catch(setError)
 
     function updateState(URL: string) {
       setPlayerState(state => ({ ...state, URL }))
@@ -66,162 +202,21 @@ export default function Player() {
     playNInQueue(queue.indexOf(currentPlayable) - 1)
   }
 
-  function defineIObserverOptions(container: HTMLDivElement) {
-    artworkContainer = container
-    options = {
-      root: container,
-      // rootMargin: '16px',
-      threshold: 1
-    }
-  }
+  function handlePlayerExtension () {
+    if (!queue.length || !panel) return
 
-  useEffect(function () {
     if (isPanelExtended)
       panel.style.top = 'calc(-100vh + 9rem)'
     else
       panel.style.top = '0'
-  }, [isPanelExtended])
-
-  function getPanel(el: HTMLDivElement) {
-    panel = el
-  }
-  const { container, wrapper, handle, content,
-    audioElement: audio, audioElementOnExtendedView,
-  artwork: artworkClass, controlsContainer, artworkQueue,
-    artworkActive, dummyArtwork } = useStyles({ isPanelExtended })
-
-  return <div className={wrapper}>
-    <div
-      ref={getPanel}
-      className={container}
-      onMouseDown={onMouseDown}
-      onTouchStart={onTouchStart}
-    >
-      <div
-        className={handle}
-        onClick={() => setPlayerState(state => ({
-          ...state,
-          isPanelExtended: !state.queue.length ? false : !state.isPanelExtended
-        }))}
-      >
-        <div />
-        <div />
-        <div />
-      </div>
-      <div className={content}>
-        <div className={artworkQueue}>
-          {
-            queue.map(({ active }, i) =>
-              <div
-                id={i.toString()}
-                className={active ? artworkActive : artworkClass}
-                key={i}
-                ref={element => {
-                  if (element) {
-                    artworks[i] = element
-                  }
-                }}
-              >
-                <img src={artwork} alt=""/>
-              </div>
-            )
-          }
-          <div className={dummyArtwork} />
-        </div>
-        <h2>{track?.name || ''}</h2>
-        <h3>{album?.name || ''}</h3>
-        <h3>{artist?.name || ''}</h3>
-        <div className={controlsContainer}>
-          <Button
-            size='m'
-            variant='secondIcon'
-            onClick={playPrevInQueue}
-          >
-            <SkipPrevious />
-          </Button>
-          <Button
-            size='m'
-            variant='icon'
-            onClick={paused ?
-              () => audioElement.current?.play() :
-              () => audioElement.current?.pause()
-            }
-          >
-            {paused ? <PlayArrow /> : <Pause />}
-          </Button>
-          <Button
-            size='m'
-            variant='secondIcon'
-            onClick={playNextInQueue}
-          >
-            <SkipNext/>
-          </Button>
-        </div>
-        <audio
-          autoPlay
-          ref={audioElement}
-          muted
-          className={isPanelExtended ? audioElementOnExtendedView : audio}
-          src={playerState.URL}
-          controls
-          onPlay={() => setPaused(false)}
-          onPause={() => setPaused(true)}
-          onError={console.log}
-          onAbort={console.log}
-          onEnded={playNextInQueue}
-        />
-      </div>
-    </div>
-  </div>
-
-  function onTouchStart (e: any) {
-    if (!panel) return
-    e = e || window.event;
-    var start = 0, diff = 0;
-    if( e.touches[0].pageY) start = e.touches[0].pageY - (panel.style.top ? parseInt(panel.style.top) : 0);
-    else if( e.touches[0].clientY) start = e.touches[0].clientY - (panel.style.top ? parseInt(panel.style.top) : 0);
-
-    panel.style.position = 'relative';
-    document.body.ontouchmove = function(e) {
-      e = e || window.event;
-      var end = 0;
-      if( e.touches[0].pageY) end = e.touches[0].pageY;
-      else if( e.touches[0].clientY) end = e.touches[0].clientY;
-
-      diff = end-start;
-      panel.style.top = diff+"px";
-    };
-    document.body.ontouchend = function() {
-      // do something with the action here
-      // elem has been moved by diff pixels in the X axis
-      // panel.style.position = 'static';
-      document.body.ontouchmove = document.body.ontouchend = null;
-    };
   }
 
-  function onMouseDown(e: any) {
-    if (!panel) return
-    e = e || window.event;
-    var start = 0, diff = 0;
-    if( e.pageY) start = e.pageY - (panel.style.top ? parseInt(panel.style.top) : 0);
-    else if( e.clientY) start = e.clientY - (panel.style.top ? parseInt(panel.style.top) : 0);
-
-    panel.style.position = 'relative';
-    document.body.onmousemove = function(e) {
-      e = e || window.event;
-      var end = 0;
-      if( e.pageY) end = e.pageY;
-      else if( e.clientY) end = e.clientY;
-
-      diff = end-start;
-      panel.style.top = diff+"px";
-    };
-    document.body.onmouseup = function() {
-      // do something with the action here
-      // elem has been moved by diff pixels in the X axis
-      // panel.style.position = 'static';
-      document.body.onmousemove = document.body.onmouseup = null;
-    };
+  function getCurrentTime(time: number) {
+    if (!audioElement.current) return
+    const date = new Date('01.01.1970 00:00')
+    date.setSeconds(time)
+    const seconds = date.getSeconds().toString()
+    return `${date.getMinutes()}:${seconds.length === 1 ? '0' + seconds : seconds}`
   }
 }
 
@@ -238,11 +233,13 @@ const useStyles = createUseStyles({
     zIndex: 111,
     color: 'white',
     userSelect: 'none',
-    backgroundColor: "rgb(255, 204, 188, .4)",
+    backgroundColor: props => props.artworkColor?.replace(')', ', .6)'),
+    transition: '1s ease background-color',
     backdropFilter: "blur(.5rem)",
     height: '100vh',
     width: '100%',
-    borderRadius: '2.5rem 2.5rem 0 0',
+    borderRadius: '1.5rem 1' +
+      '.5rem 0 0',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -252,17 +249,17 @@ const useStyles = createUseStyles({
   handle: {
     cursor: 'pointer',
     zIndex: 1,
-    margin: '.5rem 0',
+    margin: '.25rem 0',
     width: '100%',
     display: 'flex',
     justifyContent: 'center',
     '& div': {
       width: '.5rem',
       height: '.5rem',
-      backgroundColor: 'black',
+      backgroundColor: 'white',
       margin: '.25rem',
       borderRadius: '.5rem',
-      boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.25)'
+      boxShadow: '0px 0px .5rem black'
     }
   },
   content: {
@@ -281,13 +278,13 @@ const useStyles = createUseStyles({
     }
   },
   audioElement: {
+    display: 'none'
+  },
+  audioElementOnExtendedView: {
     position: 'absolute',
     height: '3.5rem',
     width: 'calc(100% - 1rem)',
-    marginTop: '-1.75rem'
-  },
-  audioElementOnExtendedView: {
-    extend: 'audioElement',
+    marginTop: '-1.75rem',
     bottom: '5.25rem'
   },
   artworkQueue: {
@@ -341,5 +338,43 @@ const useStyles = createUseStyles({
   },
   notVisible: {
     visibility: 'hidden'
+  },
+  miniPlayer: {
+    display: "flex",
+    position: 'absolute',
+    height: '4rem',
+    width: '100%',
+    top: 0,
+    textShadow: '0 0 .5rem black',
+    '& button': {
+      flex: 'none',
+      margin: '.625rem .5rem 1rem .5rem',
+      textShadow: '0 0 .5rem black'
+    },
+    '& div:last-child': {
+      display: 'flex',
+      alignItems: 'flex-end',
+      fontSize: '.825rem',
+      flex: 'none'
+    }
+  },
+  miniPlayerText: {
+    width: 'calc(100% - 6rem)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    '& p:first-child': {
+      fontSize: '.825rem'
+    },
+    '& p:last-child': {
+      marginRight: '4rem',
+      whiteSpace: 'nowrap'
+    },
+  },
+  prevNextButton: {
+    boxShadow: 'none !important',
+    '&:hover': {
+      border: `1px solid ${theme.colors.primary}`
+    }
   }
 })

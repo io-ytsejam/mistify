@@ -2,7 +2,7 @@ import {createUseStyles} from "react-jss";
 import theme from "../../Theme";
 import Button from "../../Button";
 import ArtistPanel from "../../ArtistPanel";
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 import {UploadContext} from "../Upload";
 import AlbumTrack from "../../Library/AlbumView/AlbumTrack";
 
@@ -10,8 +10,8 @@ export default function Summary () {
   const { viewHeaderDesc, viewHeader, container,
     albumPic, albumPicUpload, albumInfo, tracks } = useStyles()
   const { state: uploadState, setState: setUploadState } = useContext(UploadContext) as UploadContextType
-  const {artist, album, filesProcessing} = uploadState
-  const {name: albumName, artwork, type, releaseDate} = album
+  const { artist, album, filesProcessing } = uploadState
+  const { name: albumName, type, releaseDate, artwork } = album
   const albumDuration = filesProcessing?.reduce((acc, {duration}) => acc + duration, 0)
 
   return <div className={container}>

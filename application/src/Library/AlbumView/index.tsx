@@ -1,11 +1,13 @@
 import TopBar from "../../TopBar";
-import React, {useContext} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import Button from "../../Button";
-import {useHistory} from "react-router-dom";
+import {Redirect, useHistory} from "react-router-dom";
 import {createUseStyles} from "react-jss";
 import theme from "../../Theme";
 import {PlayerContext} from "../../App";
 import AlbumTrack from "./AlbumTrack";
+// @ts-ignore
+import ColorThief from 'colorthief'
 
 interface AlbumViewProps {
   album: Album|undefined
@@ -13,34 +15,42 @@ interface AlbumViewProps {
 }
 
 export default function AlbumView ({ album, artist }: AlbumViewProps) {
-  const history = useHistory()
-  const {viewHeader, container, tracksContainer} = useStyles()
   const {setState: setPlayerState} = useContext(PlayerContext) as PlayerContextType
+  const [artworkColor, setArtworkColor] = useState<string>()
   if (!album || !artist) throw new Error('Album view require artist and album')
-  const { name, tracks } = album
+  const { name, tracks, artwork } = album
   const {name: artistName, owner} = artist || {}
+  const { viewHeader, container, tracksContainer,
+    artworkContainer } = useStyles({ artworkBackground: artworkColor })
+
+  useEffect(function getArtworkDominantColor () {
+    const img = new Image()
+    const colorThief = new ColorThief()
+
+    img.onload = () => {
+      const [r, g, b] = colorThief.getColor(img)
+      setArtworkColor(`rgb(${r}, ${g}, ${b})`)
+    }
+
+    img.src = artwork
+  }, [artwork])
 
   return <div className={container}>
-    {/*<TopBar
-      title={artistName || ''}
-      buttons={<Button
-        size='s'
-        variant='second'
-        onClick={history.goBack}
-      >Library</Button>}
-    />*/}
-    <div>
-      <p className={viewHeader}>{name}</p>
-      <div className={tracksContainer}>
-        {tracks?.map((track, i) =>
-          <AlbumTrack
-            index={i + 1}
-            track={track}
-            onClick={playTrack(track)}
-            key={i}
-          />
-        )}
-      </div>
+    <p className={viewHeader}>{name}</p>
+    <div className={artworkContainer}>
+      <img src={artwork} alt=""/>
+    </div>
+    <div
+      className={tracksContainer}
+    >
+      {tracks?.map((track, i) =>
+        <AlbumTrack
+          index={i + 1}
+          track={track}
+          onClick={playTrack(track)}
+          key={i}
+        />
+      )}
     </div>
   </div>
 
@@ -51,7 +61,7 @@ export default function AlbumView ({ album, artist }: AlbumViewProps) {
       if (!album) return
       const queue = createQueue(album, track.hash)
       if (!queue) return
-      setPlayerState(state => ({ ...state, track, artist, album, queue }))
+      setPlayerState(state => ({ ...state, track, artist, album, queue, artworkColor }))
     }
   }
 
@@ -75,7 +85,8 @@ const useStyles = createUseStyles({
     gridRowGap: '1rem',
     gridColumnGap: '1rem',
     animation: '.2s ease-in',
-    animationName: '$container-enter'
+    animationName: '$container-enter',
+    marginBottom: '2rem'
   },
   viewHeader: {
     color: theme.colors.primary,
@@ -87,5 +98,28 @@ const useStyles = createUseStyles({
   },
   tracksContainer: {
     marginTop: '1rem'
+  },
+  artworkContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    aspectRatio: 1,
+    '& img': {
+      animation: '.4s ease',
+      animationName: '$artwork-enter',
+      width: '70%',
+      transition: '1s ease box-shadow',
+      boxShadow: props => `0 0 4rem 3rem ${props.artworkBackground || 'black'}`,
+    }
+  },
+  '@keyframes artwork-enter': {
+    from: {
+      transform: 'scale3d(.7, .7, 1)'
+    },
+    to: {
+      transform: 'scale3d(1, 1, 1)'
+    }
   }
 })

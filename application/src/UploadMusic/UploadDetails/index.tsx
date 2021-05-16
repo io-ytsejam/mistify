@@ -1,19 +1,19 @@
 import theme from "../../Theme";
 import {createUseStyles, Styles} from "react-jss";
 import Button from "../../Button";
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 import {artistPic} from "../../ArtistPanel";
 import Input from "../../Input";
 import {UploadContext} from "../Upload";
 
 export default function UploadDetails () {
+  const [artwork, setArtwork] = useState('')
   const { container, viewHeader, viewHeaderDesc,
     albumPic, albumPicUpload, loadPictureButtonHelperText,
     buttonWrapper, inputsWrapper } = useStyles()
   const uploadContextWithReducer = useContext(UploadContext)
   if (uploadContextWithReducer === undefined) throw new Error('Context must be provided')
   const { state: uploadState, setState: setUploadState } = uploadContextWithReducer
-  const { artwork } = uploadState.album
   let fileInput: HTMLInputElement
 
   function setFileInput(input: HTMLInputElement) {

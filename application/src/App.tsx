@@ -111,7 +111,8 @@ const styles = {
     '*': {
       margin: 0,
       fontFamily: 'Montserrat',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      userSelect: 'none'
     }
   }
 }

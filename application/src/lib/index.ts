@@ -14,7 +14,7 @@ export async function getTextHash(text: string): Promise<string> {
   return await getBinaryFileHash(textEncoder.encode(text))
 }
 
-export async function getArtistPictureURL(artist: IArtist) {
+export async function getArtistPictureURL(artist: IArtist): Promise<string> {
   const db = new MainDB()
   const binaryMetadata = await db.getArtistPicture(artist)
 
@@ -23,10 +23,11 @@ export async function getArtistPictureURL(artist: IArtist) {
     return URL.createObjectURL(await requestBinaryData(binaryMetadata))
   } catch (e) {
     console.warn(e)
+    return ''
   }
 }
 
-export async function getAlbumArtworkURL(album: IAlbum) {
+export async function getAlbumArtworkURL(album: IAlbum): Promise<string> {
   const db = new MainDB()
   const binaryMetadata = await db.getAlbumArtwork(album)
 
@@ -35,6 +36,7 @@ export async function getAlbumArtworkURL(album: IAlbum) {
     return URL.createObjectURL(await requestBinaryData(binaryMetadata))
   } catch (e) {
     console.warn(e)
+    return ''
   }
 }
 
@@ -54,17 +56,17 @@ function getLinkURL(link: string) {
   } catch (_) {}
 }
 
-export async function mapIAlbumOnAlbums(iAlbums: IAlbum[]) {
+export async function mapIAlbumOnAlbums(iAlbums: IAlbum[]): Promise<Album[]> {
   return Promise.all(iAlbums.map(async iAlbum => ({
     ...iAlbum,
     type: iAlbum.type as AlbumType,
     releaseDate: parseDate(iAlbum.releaseDate),
     tracks: await mapITracksOnTracks(iAlbum.tracks),
     artwork: await getAlbumArtworkURL(iAlbum)
-  })))
+  }) as Album))
 }
 
-async function mapITracksOnTracks(iTracks: ITrack[]) {
+async function mapITracksOnTracks(iTracks: ITrack[]): Promise<Track[]> {
   const db = new MainDB()
   const meta = await db.binaryMetadata.toArray()
 

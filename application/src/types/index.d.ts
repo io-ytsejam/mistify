@@ -28,7 +28,7 @@ type Album = {
   name: string
   type: AlbumType
   releaseDate: Date
-  artwork?: string
+  artwork: string
   tracks?: Array<Track>
 }
 
@@ -88,6 +88,7 @@ type NowPlaying = {
   track?: Track
   album?: Album
   artist?: Artist
+  artworkColor?: string
   isPanelExtended: boolean
 }
 

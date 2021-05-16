@@ -1,10 +1,6 @@
 export {
   observeApp,
   AppEvents,
-  dispatchPcsChange,
-  dispatchDataChannelOpen,
-  dispatchDataChannelLibrary,
-  dispatchDBChange
 }
 
 const observeApp = new EventTarget()
@@ -16,22 +12,27 @@ const AppEvents = {
     RECEIVED_REMOTE_LIBRARY: 'receivedRemoteLibrary',
     GET_BINARY: 'getBinary',
     STREAM_REQUESTED_BINARY: 'streamRequestedBinary',
+    DELETE_SEEDER: 'deleteSeeder',
     LIBRARY_UPDATED: 'libraryUpdated'
   }
 }
 
-function dispatchPcsChange() {
+export function dispatchPcsChange() {
   observeApp.dispatchEvent(new Event(AppEvents.CHANGE))
 }
 
-function dispatchDataChannelOpen() {
+export function dispatchDataChannelOpen() {
   observeApp.dispatchEvent(new Event(AppEvents.DATA_CHANNEL_OPEN))
 }
 
-function dispatchDataChannelLibrary({ data }: { key: string, data: string }) {
+export function dispatchReceivedLibrary({ data }: { key: string, data: string }) {
   observeApp.dispatchEvent(new CustomEvent(AppEvents.DataChannel.RECEIVED_REMOTE_LIBRARY, { detail: data }))
 }
 
-function dispatchDBChange() {
+export function dispatchDBChange() {
   observeApp.dispatchEvent(new Event(AppEvents.DB_CHANGE))
+}
+
+export function dispatchDeleteSeeder({ data }: { data: string }) {
+  observeApp.dispatchEvent(new CustomEvent(AppEvents.DataChannel.DELETE_SEEDER, { detail: data }))
 }

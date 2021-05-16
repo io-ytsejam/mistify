@@ -1,7 +1,9 @@
-import MainDB, {IAlbum, IArtist, IBinaryMetadata, ITrack} from "../MainDB";
-import {broadCastMessage} from "../RTC";
-import {dispatchDBChange, observeApp} from "../Observe";
-import {getTextHash} from "../lib";
+import MainDB, { IArtist, IBinaryMetadata } from "../MainDB";
+import { broadCastMessage } from "../RTC";
+import {AppEvents, dispatchDBChange} from "../Observe";
+import { getTextHash } from "../lib";
+import lodash from 'lodash';
+import deepEqual from "deep-equal";
 
 const db = new MainDB()
 
@@ -27,7 +29,7 @@ async function getLibraryPropagationData(): Promise<string> {
   async function handleDBResult([artists, meta]: [Array<IArtist>, Array<IBinaryMetadata>]): Promise<string> {
     const library = { artists, meta }
     return JSON.stringify({
-      key: 'library',
+      key: AppEvents.DataChannel.LIBRARY_UPDATED,
       data: {
         ...library,
         hash: await getTextHash(JSON.stringify(library))
@@ -39,14 +41,14 @@ async function getLibraryPropagationData(): Promise<string> {
 
 /** Check if some new music came from peer and save it to DB. */
 export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
-  const { artists, meta, hash: receivedLibraryHash } = receivedLibrary
+  const { artists, meta, hash: receivedLibraryHash } = receivedLibrary as { meta: IBinaryMetadata[], artists: IArtist[], hash: string }
 
   console.info('Received library')
   getLibraryPropagationData()
     .then(putNewLibraryData)
 
-  function putNewLibraryData(libraryPropagationData: string) {
-    const { hash: localLibraryHash } = JSON.parse(libraryPropagationData).data
+  function putNewLibraryData(localLibrary: string) {
+    const { hash: localLibraryHash, artists, meta } = JSON.parse(localLibrary).data
 
     if (localLibraryHash === receivedLibraryHash) {
       return console.info('No changes from received library')
@@ -54,11 +56,30 @@ export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
 
     console.log(receivedLibrary)
 
+    console.warn(lodash.difference([...artists, ...meta], [...receivedLibrary.artists, ...receivedLibrary.meta]))
+
+    console.log(deepEqual([...artists, ...meta], [...receivedLibrary.artists, ...receivedLibrary.meta]))
+    console.log({local: [...artists, ...meta]}, {remote: [...receivedLibrary.artists, ...receivedLibrary.meta]})
+    console.log({local: JSON.stringify([...artists, ...meta]).length}, {remote: JSON.stringify([...receivedLibrary.artists, ...receivedLibrary.meta]).length})
+    console.log({local: JSON.stringify([...artists, ...meta])}, {remote: JSON.stringify([...receivedLibrary.artists, ...receivedLibrary.meta])})
+
     libraryTransaction()
   }
 
   function executeMetaTransaction() {
-    db.binaryMetadata.bulkPut(meta)
+    db.binaryMetadata.toArray()
+      .then(localMeta => {
+        const hashes = lodash.uniq([...meta, ...localMeta].map(({ hash }) => hash))
+
+        db.binaryMetadata.bulkPut(
+          hashes.map(hash => ({
+            hash, seeders: lodash.uniq([
+              ...meta.find(({ hash: h }) => h === hash)?.seeders || [],
+              ...localMeta.find(({ hash: h }) => h === hash)?.seeders || [],
+            ])
+          }))
+        )
+      })
   }
 
   function executeArtistsTransaction() {
@@ -98,4 +119,24 @@ export async function addDataSeeder(dataHash: string, seeder: string) {
     console.log(value)
     propagateLibrary()
   }
+}
+
+export async function removeDataSeeder(dataHash: string, seeder: string) {
+  db.removeSeederForGivenData(dataHash, seeder).finally(onSeederIsNotPresent)
+
+  function onSeederIsNotPresent() {
+    const message = JSON.stringify({
+      key: AppEvents.DataChannel.DELETE_SEEDER,
+      data: { dataHash, seeder }
+    })
+
+    broadCastMessage(message)
+  }
+}
+
+export function handleRemoveSeeder({ detail: meta }: CustomEvent) {
+  const { dataHash, seeder } = meta
+
+  db.removeSeederForGivenData(dataHash, seeder)
+    .then(() => console.info('Updated data seeders'))
 }

@@ -1,24 +1,28 @@
 import {createUseStyles, Styles} from "react-jss";
 import Button from "../Button";
 import MainDB from "../MainDB";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Album from "./Album";
-import { Route, Switch, useHistory, useLocation } from "react-router-dom";
+import {Redirect, Route, Switch, useHistory, useLocation} from "react-router-dom";
 import AlbumView from "./AlbumView";
 import AlbumCollection from "./AlbumCollection";
 import {AppEvents, observeApp} from "../Observe";
 import TopBar from "../TopBar";
 import { mapIArtistsOnArtists } from "../lib";
 import ArtistsView from "./ArtistsView";
+import ContentLoader from "react-content-loader";
+import ListOfArtistsLoading from "../ArtistPanel/ListOfArtistsLoading";
 
 export default function Library() {
   const history = useHistory()
   const location = useLocation()
+  const [artistsCount, setArtistsCount] = useState<number>()
   const [artists, setArtists] = useState<Array<Artist>>()
   const [viewAlbum, setViewAlbum] = useState<Album>()
   const [viewArtist, setViewArtist] = useState<Artist>()
   const db = new MainDB()
   const { container } = useStyles()
+  db.getArtistsCount().then(setArtistsCount)
 
   useEffect(initialize, [])
 
@@ -26,7 +30,9 @@ export default function Library() {
 
   return <>
     <TopBar
-      title={viewArtist ? viewArtist.name : 'Library'} buttons={
+      title={viewArtist && location.pathname.match(/view-(artist|album)/) ?
+        viewArtist.name : 'Library'}
+      buttons={
         buttonTitle && <Button
             onClick={history.goBack}
             size='s'
@@ -39,16 +45,19 @@ export default function Library() {
     <div className={container}>
       <Switch>
         <Route path='/library/view-album'>
-          {viewAlbum && <AlbumView artist={viewArtist} album={viewAlbum}/>}
+          {viewAlbum ?
+            <AlbumView artist={viewArtist} album={viewAlbum}/> :
+            <Redirect to='/library' />}
         </Route>
         <Route path='/library/view-artist'>
-          {viewArtist && <AlbumCollection
+          {viewArtist ? <AlbumCollection
               albums={viewArtist.albums || []}
               showAlbum={showAlbum}
-          />}
+          /> : <Redirect to='/library' />}
         </Route>
         <Route path='/library'>
-          {artists && <ArtistsView showArtist={showArtist} artists={artists} />}
+          {artists ? <ArtistsView showArtist={showArtist} artists={artists} /> :
+            <ListOfArtistsLoading count={artistsCount || 4} />}
         </Route>
       </Switch>
     </div>
