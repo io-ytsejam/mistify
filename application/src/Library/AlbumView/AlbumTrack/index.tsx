@@ -2,7 +2,7 @@ import {createUseStyles} from "react-jss";
 import theme from "../../../Theme";
 import {MouseEventHandler, useContext} from "react";
 import {PlayerContext} from "../../../App";
-import Popup from "../../../Popup";
+import {convertMsToMnsAndSecs} from "../../../lib";
 
 interface AlbumTrackProps {
   track?: Track
@@ -13,7 +13,7 @@ interface AlbumTrackProps {
 
 export default function AlbumTrack({ track, index, onClick, children }: AlbumTrackProps) {
   const { state: playerState } = useContext(PlayerContext) as PlayerContextType
-  const { track: nowPlayingTrack, isPanelExtended } = playerState
+  const { track: nowPlayingTrack } = playerState
   const { container, trackNumber, activeTrack } = useStyles()
   const { name, length, hash } = track || {}
 
@@ -22,9 +22,11 @@ export default function AlbumTrack({ track, index, onClick, children }: AlbumTra
     onClick={onClick as MouseEventHandler}
   >
     <p><span className={trackNumber}>{index}</span>{name || children}</p>
-    <p>{length}</p>
+    <p>{convertMsToMnsAndSecs(length || 0)}</p>
   </div>
 }
+
+
 
 const useStyles = createUseStyles({
   container: {

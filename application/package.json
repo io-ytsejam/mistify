@@ -63,6 +63,7 @@
   "proxy": "http://localhost:8080",
   "devDependencies": {
     "@types/deep-equal": "^1.0.1",
+    "@types/diff": "^5.0.0",
     "@types/ffmpeg.js": "^3.1.1",
     "@types/jsmediatags": "^3.9.2",
     "@types/lodash": "^4.14.169",

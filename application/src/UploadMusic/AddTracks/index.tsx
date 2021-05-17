@@ -4,7 +4,6 @@ import Button from "../../Button";
 import React, {useContext} from "react";
 import TrackUpload from "../TrackUpload";
 import {UploadContext} from "../Upload";
-import {Redirect} from "react-router-dom";
 
 export default function AddTracks () {
   const {container, viewHeader, viewHeaderDesc,

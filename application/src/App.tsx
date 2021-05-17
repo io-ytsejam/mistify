@@ -55,7 +55,9 @@ export default function App() {
           height: '100vh',
           boxSizing: 'border-box',
           overflowY: 'scroll',
-          paddingBottom: '5.5rem'
+          paddingBottom: '5.5rem',
+          width: '100%',
+          maxWidth: '1000px'
         }}
       >
 

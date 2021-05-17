@@ -11,6 +11,7 @@ import {ErrorBoundary} from "react-error-boundary";
 import Popup, {ErrorBoundaryPopup} from "../Popup";
 import theme from "../Theme";
 import {prepareOnPanelMouseDown, prepareOnPanelTouchStart} from "./PanelEvents";
+import {convertMsToMnsAndSecs} from "../lib";
 
 export default function Player() {
   const [panel, setPanel] = useState<HTMLDivElement|null>()
@@ -56,10 +57,7 @@ export default function Player() {
       >
         <div
           className={handle}
-          onClick={() => setPlayerState(state => ({
-            ...state,
-            isPanelExtended: !state.queue.length ? false : !state.isPanelExtended
-          }))}
+          onClick={togglePanelExtended}
         >
           <div />
           <div />
@@ -127,12 +125,17 @@ export default function Player() {
               >
                 {paused ? <PlayArrow /> : <Pause />}
               </Button>
-              <div className={miniPlayerText}>
+              <div
+                  onClick={togglePanelExtended}
+                  className={miniPlayerText}
+              >
                   <p>{artist?.name}</p>
                   <p>{track?.name}</p>
               </div>
               <div>
-                  <p>{getCurrentTime(currentTime)}</p>
+                {audioElement.current?.paused ? 'PAUSED' :
+                  <p>{convertMsToMnsAndSecs(currentTime)}</p>
+                }
               </div>
           </div>}
           <audio
@@ -159,6 +162,13 @@ export default function Player() {
       </div>
     </div>
   </ErrorBoundary>
+
+  function togglePanelExtended () {
+    setPlayerState(state => ({
+      ...state,
+      isPanelExtended: !state.queue.length ? false : !state.isPanelExtended
+    }))
+  }
 
   function updateActiveArtwork () {
     const artwork = queue.find(({ active }) => active)
@@ -217,7 +227,6 @@ export default function Player() {
   }
 
   function getCurrentTime(time: number) {
-    if (!audioElement.current) return
     const date = new Date('01.01.1970 00:00')
     date.setSeconds(time)
     const seconds = date.getSeconds().toString()
@@ -364,6 +373,7 @@ const useStyles = createUseStyles({
     }
   },
   miniPlayerText: {
+    cursor: 'pointer',
     width: 'calc(100% - 6rem)',
     display: 'flex',
     flexDirection: 'column',

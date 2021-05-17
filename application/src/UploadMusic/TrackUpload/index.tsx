@@ -10,11 +10,10 @@ import {readTags} from "../prepareWebM";
 import Clear from "@material-ui/icons/Clear";
 
 export default function TrackUpload({index, setFileProcessing, fileProcessing}: TrackUploadProps) {
-  const [title, setTitle] = useState('Load...')
   const [loaded, setLoaded] = useState(false)
   const { name } = fileProcessing
 
-  const {processingInProgress, processingSuccessful, processingFailure} = fileProcessing
+  const { processingInProgress, processingSuccessful } = fileProcessing
 
   function handleChange ({target}: ChangeEvent<HTMLInputElement>) {
     const file = target.files?.item(0)
@@ -23,21 +22,31 @@ export default function TrackUpload({index, setFileProcessing, fileProcessing}: 
     file.arrayBuffer().then(handleBinaryTrack)
 
     async function handleBinaryTrack(ab: ArrayBuffer) {
-      const { title: name = 'Title', artist, album } = await readTags(ab)
+      const { title: name = 'Title' } = await readTags(ab)
       const fileProcessing: FileProcessing = {
         mp3File: ab,
         processingInProgress: false,
         processingSuccessful: false,
         processingFailure: undefined,
         name,
-        duration: 0,
+        duration: await getTrackDuration(ab),
         hash: '',
         webMFile: null
       }
 
       setLoaded(true)
       setFileProcessing(fileProcessing)
+      console.log({ duration: await getTrackDuration(ab)})
     }
+  }
+
+  function getTrackDuration(track: ArrayBuffer): Promise<number> {
+    return new Promise(resolve => {
+      const audio = new Audio()
+
+      audio.oncanplaythrough = () => resolve(audio.duration)
+      audio.src = URL.createObjectURL(new Blob([track]))
+    })
   }
 
   let fileInputHandler: HTMLInputElement

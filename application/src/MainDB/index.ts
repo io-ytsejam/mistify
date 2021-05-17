@@ -122,19 +122,19 @@ export default class MainDB extends Dexie {
       ]
 
       db.binaryMetadata.bulkAdd(binaryMetadata).then(res => {
-        console.log(`%c ${res}`, 'color: green')
+        console.log(`%c Metadata added successfully`, 'color: green')
       }).catch(err => {
         console.log(`%c ${err}`, 'color: red')
       })
 
       db.binaryData.bulkAdd(audioBinaryTracks).then(res => {
-        console.log(`%c ${res}`, 'color: green')
+        console.log(`%c Binary tracks added successfully`, 'color: green')
       }).catch(err => {
         console.log(`%c ${err}`, 'color: red')
       })
 
       db.binaryData.bulkAdd(pictures).then(res => {
-        console.log(`%c ${res}`, 'color: green')
+        console.log(`%c Pictures added successfully`, 'color: green')
       }).catch(err => {
         console.log(`%c ${err}`, 'color: red')
       })
@@ -145,8 +145,8 @@ export default class MainDB extends Dexie {
         .delete()
         .finally(() => {
           db.artists.add(newArtist)
-            .then(console.info)
-            .catch(console.error)
+            .then(() => console.log(`%c Artist/album added successfully`, 'color: green'))
+            .catch(err => console.log(`%c ${err}`, 'color: red'))
         })
 
       async function getArtistPicture(URL: string) {

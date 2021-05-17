@@ -4,6 +4,10 @@ import {AppEvents, dispatchDBChange} from "../Observe";
 import { getTextHash } from "../lib";
 import lodash from 'lodash';
 import deepEqual from "deep-equal";
+import { diffJson } from 'diff'
+
+// @ts-ignore
+window.lodash = lodash
 
 const db = new MainDB()
 const userID = localStorage.getItem('id') || ''
@@ -55,14 +59,7 @@ export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
       return console.info('No changes from received library')
     }
 
-    console.log(receivedLibrary)
-
-    console.warn(lodash.difference([...artists, ...meta], [...receivedLibrary.artists, ...receivedLibrary.meta]))
-
-    console.log(deepEqual([...artists, ...meta], [...receivedLibrary.artists, ...receivedLibrary.meta]))
-    console.log({local: [...artists, ...meta]}, {remote: [...receivedLibrary.artists, ...receivedLibrary.meta]})
-    console.log({local: JSON.stringify([...artists, ...meta]).length}, {remote: JSON.stringify([...receivedLibrary.artists, ...receivedLibrary.meta]).length})
-    console.log({local: JSON.stringify([...artists, ...meta])}, {remote: JSON.stringify([...receivedLibrary.artists, ...receivedLibrary.meta])})
+    console.info('Local DB will be updated')
 
     libraryTransaction()
   }
@@ -72,18 +69,21 @@ export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
       .then(localMeta => {
         const hashes = lodash.uniq([...meta, ...localMeta].map(({ hash }) => hash))
 
-        db.binaryMetadata.bulkPut(
-          hashes.map(hash => ({
-            hash, seeders: lodash.uniq([
-              ...meta.find(({ hash: h }) => h === hash)?.seeders || [],
-              ...localMeta.find(({ hash: h }) => h === hash)?.seeders || [],
-            ])
-          }))
-        )
+        const toPut = hashes.map(hash => ({
+          hash, seeders: lodash.uniq([
+            ...meta.find(({ hash: h }) => h === hash)?.seeders || [],
+            ...localMeta.find(({ hash: h }) => h === hash)?.seeders || [],
+          ])
+        }))
+
+        db.binaryMetadata.bulkPut(toPut)
       })
   }
 
   function executeArtistsTransaction() {
+    db.artists.toArray().then(localArtists => {
+
+    })
     db.artists.bulkPut(artists)
   }
 

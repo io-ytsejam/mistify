@@ -1846,6 +1846,11 @@
   "resolved" "https://registry.npmjs.org/@types/deep-equal/-/deep-equal-1.0.1.tgz"
   "version" "1.0.1"
 
+"@types/diff@^5.0.0":
+  "integrity" "sha512-jrm2K65CokCCX4NmowtA+MfXyuprZC13jbRuwprs6/04z/EcFg/MCwYdsHn+zgV4CQBiATiI7AEq7y1sZCtWKA=="
+  "resolved" "https://registry.npmjs.org/@types/diff/-/diff-5.0.0.tgz"
+  "version" "5.0.0"
+
 "@types/eslint@^7.2.6":
   "integrity" "sha512-I+1sYH+NPQ3/tVqCeUSBwTE/0heyvtXqpIopUUArlBm0Kpocb8FbMa3AZ/ASKIFpN3rnEx932TTXDbt9OXsNDw=="
   "resolved" "https://registry.npmjs.org/@types/eslint/-/eslint-7.2.6.tgz"

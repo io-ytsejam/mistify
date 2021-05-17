@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { sendICECandidate } from "../Connection";
 import MainDB, {IBinaryData, IBinaryMetadata} from "../MainDB";
-import {addDataSeeder, propagateLibrary, removeDataSeeder} from "../LibraryController";
+import { addDataSeeder, removeDataSeeder } from "../LibraryController";
 import {
   AppEvents,
   dispatchReceivedLibrary,
@@ -9,8 +9,6 @@ import {
   dispatchPcsChange,
   dispatchDeleteSeeder
 } from "../Observe";
-import App from "../App";
-import {Peer} from "../../../server/managePeers";
 
 export { pcs }
 
@@ -80,7 +78,7 @@ export async function requestBinaryData(meta: IBinaryMetadata): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const { pc, peerID } = pcs.find(({peerID, pc}) => seeders.some(userToken => userToken === peerID && pc.connectionState === 'connected')) || {}
       if (!pc) throw new Error('No peer streaming this data is reachable')
-      console.debug("Streaming from", peerID)
+      console.debug("Streaming from", peerID?.substr(0, 6))
       const dataParts: Array<ArrayBuffer> = []
       const dataChannel = pc.createDataChannel(getLabel())
       dataChannel.onmessage = onMessage
@@ -115,9 +113,12 @@ export async function requestBinaryData(meta: IBinaryMetadata): Promise<Blob> {
 }
 
 function assurePeerIsSeeder(meta: IBinaryMetadata) {
-  db.binaryMetadata.where("hash").equals(meta.hash)
+  const { hash } = meta
+
+  db.binaryMetadata.where("hash").equals(hash)
     .first().then(existingMeta => {
     if (!existingMeta) db.binaryMetadata.add(meta)
+    else if (existingMeta.seeders.some(seeder => seeder === userID)) return
     else db.binaryMetadata.update(meta.hash, { ...existingMeta, seeders: [
         ...existingMeta.seeders,
         userID
@@ -165,6 +166,7 @@ export async function requestTrackStream(meta: IBinaryMetadata, onError: (error:
     function onFulfilled(track: IBinaryData | undefined) {
       if (track) {
         buffer.appendBuffer(track.binary)
+        buffer.onupdateend = () => mediaSource.endOfStream()
         assurePeerIsSeeder(meta)
       } else throw new Error('Track not found locally')
     }
@@ -196,6 +198,17 @@ export async function requestTrackStream(meta: IBinaryMetadata, onError: (error:
           onError(new Error('Data not available right now'))
         }
         if (data !== 'END') return
+        if (!buffer.updating) {
+          mediaSource.endOfStream()
+        } else {
+          buffer.onupdateend = function () {
+            try {
+              mediaSource.endOfStream()
+            } catch (e) {
+              console.warn(e)
+            }
+          }
+        }
         handleStreamEnd(trackParts)
         dataChannel.close()
       } else {

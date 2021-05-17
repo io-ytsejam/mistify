@@ -77,3 +77,10 @@ async function mapITracksOnTracks(iTracks: ITrack[]): Promise<Track[]> {
 function parseDate(date: string): Date {
   return new Date(Date.parse(date.split('.').reverse().join('-')))
 }
+
+export function convertMsToMnsAndSecs(ms: number) {
+  const date = new Date('01.01.1970 00:00')
+  date.setSeconds(ms)
+  const seconds = date.getSeconds().toString()
+  return `${date.getMinutes()}:${seconds.length === 1 ? '0' + seconds : seconds}`
+}
