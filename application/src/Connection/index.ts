@@ -11,6 +11,12 @@ import {
 
 import {handleReceivedLibrary, handleRemoveSeeder, propagateLibrary} from "../LibraryController";
 import {AppEvents, observeApp} from "../Observe";
+import {
+  connectWithRandomPeer,
+  onPeerConnectionList,
+  requestPeerConnectionsList
+} from "../RTC/PeerToPeerOverPeerSignaling";
+import lodash from "lodash";
 
 const { hostname } = window.location
 const webSocket = new WebSocket(`ws://${hostname}:8080`);
@@ -21,10 +27,29 @@ onConnect(onMembersUpdate)
 function onMembersUpdate(peers: Array<string>) {
   // Because user joining the network initialize connections with others,
   // we call it only on first update.
-  if (pcs.length > 0) return
 
-  connectWithPeers([...peers])
+
+
+  const numberOfConnectedPCS = pcs.filter(filterConnectedPCS).length
+
+  console.log({ numberOfConnectedPCS })
+
+  const connectedPcs = pcs.filter(filterConnectedPCS) || []
+  if (connectedPcs.length)
+    connectedPcs
+      .forEach(({dataChannel}) => {
+        if (!dataChannel) return
+        requestPeerConnectionsList(dataChannel).then(e => onPeerConnectionList(e, dataChannel))
+      })
+
+  if (numberOfConnectedPCS > 0) return
+
+  connectWithRandomPeer()
   addListeners()
+
+  function filterConnectedPCS({ pc }: PeerConnection) {
+    return pc.connectionState === 'connected'
+  }
 }
 
 function connectWithPeers(peers: Array<string>) {
@@ -33,10 +58,48 @@ function connectWithPeers(peers: Array<string>) {
     .forEach(connectWithPeer)
 }
 
+function sendMembersUpdate({ detail }: CustomEvent) {
+  (detail as RTCDataChannel).send(JSON.stringify({ key: AppEvents.DataChannel.MEMBERS_UPDATE, data: pcs.map(({ peerID }) => peerID)}))
+}
+
 function addListeners() {
   observeApp.addEventListener(AppEvents.DATA_CHANNEL_OPEN, propagateLibrary)
+  observeApp.addEventListener(AppEvents.DATA_CHANNEL_OPEN, sendMembersUpdate as EventListener)
   observeApp.addEventListener(AppEvents.DataChannel.RECEIVED_REMOTE_LIBRARY, handleReceivedLibrary as EventListener)
   observeApp.addEventListener(AppEvents.DataChannel.DELETE_SEEDER, handleRemoveSeeder as EventListener)
+  observeApp.addEventListener(AppEvents.DataChannel.GET_CONNECTIONS, handleGetConnections as EventListener)
+  observeApp.addEventListener(AppEvents.DataChannel.REDIRECT_OFFER, handleRedirectOffer as EventListener)
+  observeApp.addEventListener(AppEvents.DataChannel.MEMBERS_UPDATE, () => {
+    onMembersUpdate(pcs.map(({peerID}) => peerID))
+  })
+}
+
+function handleRedirectOffer({ detail }: CustomEvent) {
+  const { offerWithID, offerer, respondTo, redirectTo } = JSON.parse(detail)
+
+  const { dataChannel: dc } = pcs.find(({ peerID, dataChannel }) => peerID === redirectTo && dataChannel?.readyState === 'open') || {}
+  const message = JSON.stringify({ key: 'REDIRECTED_OFFER', data: { offerer, offerWithID, respondTo: userID } })
+
+  console.debug('REDIRECT OFFER', dc, detail)
+
+  if (!dc) return
+
+
+
+  // LEGIT DC
+  dc.send(message)
+
+  // handleConnectRequestPTPOPS(dc, JSON.stringify({ data: { offerWithID, dc } }))
+}
+
+function handleGetConnections({ detail: dc }: CustomEvent) {
+  (dc as RTCDataChannel).send(
+    JSON.stringify(
+      lodash.uniq( // For some reason it happens that peer is connected twice with the same peer, so uniq
+        pcs
+          .filter(({ peerID, pc }) => peerID && pc.connectionState === 'connected')
+          .map(({ peerID }) => peerID)
+      )))
 }
 
 /** Hook-up all logic with WebSocket */
@@ -101,7 +164,7 @@ function join() {
   sendMessage('join', id)
 }
 
-function sendMessage(key: string, value: any) {
+export function sendMessage(key: string, value: any) {
   const message = JSON.stringify({key, value})
 
   webSocket.send(message)
@@ -125,3 +188,4 @@ export async function connectWithPeer(id: string) {
 
   sendMessage("connectWithPeer", JSON.stringify({id, offer, respondTo}))
 }
+

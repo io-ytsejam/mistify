@@ -2,7 +2,7 @@
 // @ts-ignore
 import { acceptWebSocket, isWebSocketCloseEvent, isWebSocketPingEvent, WebSocket } from "https://deno.land/std@0.88.0/ws/mod.ts";
 
-import {onTextMessage} from "./controller.ts";
+import { onTextMessage, onClosed } from "./controller.ts";
 
 export type sendBack = (msg: string) => void
 
@@ -19,6 +19,7 @@ export default async function websocket(socket: WebSocket) {
         const [, body] = ev;
       } else if (isWebSocketCloseEvent(ev)) {
         // close.
+        onClosed()
         const { code, reason } = ev;
         console.log("ws:Close", code, reason);
       }

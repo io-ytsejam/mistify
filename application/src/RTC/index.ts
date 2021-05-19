@@ -7,7 +7,7 @@ import {
   dispatchReceivedLibrary,
   dispatchDataChannelOpen,
   dispatchPcsChange,
-  dispatchDeleteSeeder
+  dispatchDeleteSeeder, dispatchGetConnectionsList, dispatchRedirectOffer, dispatchMembersUpdate
 } from "../Observe";
 
 export { pcs }
@@ -34,6 +34,10 @@ const userID = localStorage.getItem('id') || ''
 // For debugging
 // @ts-ignore
 window.pcs = pcs
+
+export function getPC(peerID: string) {
+  return pcs.find(({ peerID: p }) => p === peerID)
+}
 
 export function broadCastMessage(message: string) {
   pcs.map(({dataChannel}) => dataChannel)
@@ -252,7 +256,7 @@ export async function requestTrackStream(meta: IBinaryMetadata, onError: (error:
   }
 }
 
-function onDataChannelMessage({data: message}: { data: string }) {
+function onDataChannelMessage(this: RTCDataChannel, { data: message }: { data: string }) {
   try {
     const {key, data} = JSON.parse(message)
     if (key === AppEvents.DataChannel.LIBRARY_UPDATED)
@@ -261,8 +265,10 @@ function onDataChannelMessage({data: message}: { data: string }) {
       console.log('PING')
     else if (key === AppEvents.DataChannel.DELETE_SEEDER) {
       dispatchDeleteSeeder({ data })
-    }
-    else {
+    } else if (key === AppEvents.DataChannel.GET_CONNECTIONS) {
+      // TODO: No inline. Move to function. Move from RTC/index.ts
+      this.send(JSON.stringify(pcs.map(({ peerID }) => peerID)))
+    } else {
       console.warn('Undefined message:', { data, key })
     }
   } catch (e) {
@@ -270,6 +276,7 @@ function onDataChannelMessage({data: message}: { data: string }) {
   }
 }
 
+/** Control requests coded in data channel labels */
 function onDataChannel({ channel }: RTCDataChannelEvent) {
   try {
     const { key, data } = JSON.parse(channel.label)
@@ -278,6 +285,11 @@ function onDataChannel({ channel }: RTCDataChannelEvent) {
 
     streamRequestedData(trackHash, channel)
   } catch (_) {}
+}
+
+function onPTPOPSDataChannelMessage(this: RTCDataChannel, { data }: MessageEvent<string>) {
+  console.log(data)
+  dispatchRedirectOffer(this, JSON.stringify(JSON.parse(data).data))
 }
 
 function streamRequestedData(dataHash: string, dataChannel: RTCDataChannel) {

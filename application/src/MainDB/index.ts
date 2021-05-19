@@ -28,9 +28,11 @@ export default class MainDB extends Dexie {
     this.binaryMetadata = this.table("binaryMetadata")
 
     this.getArtistPicture = async function ({ pictureHash }: IArtist) {
+      if (!pictureHash) return
       return this.binaryMetadata.where('hash').equals(pictureHash).first()
     }
     this.getAlbumArtwork = async function ({ artworkHash }: IAlbum) {
+      if (!artworkHash) return
       return this.binaryMetadata.where('hash').equals(artworkHash).first()
     }
     this.getOwnArtistsCount = async function() {
