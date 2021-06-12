@@ -69,10 +69,10 @@ export default class MainDB extends Dexie {
       }))
 
       const tracks: Array<ITrack> = filesProcessing.map(({hash, name, duration}) => ({
-        name, hash, length: duration, id: uuid()
+        name, hash, length: duration
       }))
 
-      const metaTracks: Array<IBinaryMetadata> = filesProcessing.map(({hash, name, duration}) => ({
+      const metaTracks: Array<IBinaryMetadata> = filesProcessing.map(({ hash }) => ({
         hash, seeders: [userID]
       }))
 

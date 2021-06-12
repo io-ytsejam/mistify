@@ -53,7 +53,7 @@ export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
     .then(putNewLibraryData)
 
   function putNewLibraryData(localLibrary: string) {
-    const { hash: localLibraryHash, artists, meta } = JSON.parse(localLibrary).data
+    const { hash: localLibraryHash } = JSON.parse(localLibrary).data
 
     if (localLibraryHash === receivedLibraryHash) {
       return console.info('No changes from received library')
@@ -81,9 +81,6 @@ export function handleReceivedLibrary({detail: receivedLibrary}: CustomEvent) {
   }
 
   function executeArtistsTransaction() {
-    db.artists.toArray().then(localArtists => {
-
-    })
     db.artists.bulkPut(artists)
   }
 

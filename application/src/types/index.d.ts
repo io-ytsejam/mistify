@@ -108,8 +108,3 @@ interface PeerConnection {
   peerID: string,
   dataChannel?: RTCDataChannel
 }
-
-interface TrackStream {
-  mediaSource: MediaSource
-  buffer: SourceBuffer
-}

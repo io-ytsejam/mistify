@@ -240,11 +240,10 @@ export async function requestTrackStream(meta: IBinaryMetadata, onError: (error:
   function getSourceBuffer(): Promise<SourceBuffer> {
     return new Promise<SourceBuffer>(executor)
 
-    function executor(resolved: (value: SourceBuffer) => void, rejected: (value: unknown) => void) {
+    function executor(resolved: (value: SourceBuffer) => void) {
       mediaSource.onsourceopen = onSourceOpen
 
       function onSourceOpen () {
-        // TODO: Move to settings, constants or smth
         const buffer = mediaSource.addSourceBuffer('audio/webm; codecs="opus"')
         resolved(buffer)
       }
@@ -281,7 +280,6 @@ function onDataChannel({ channel }: RTCDataChannelEvent) {
 }
 
 function streamRequestedData(dataHash: string, dataChannel: RTCDataChannel) {
-  // TODO: Refactor this
   db.binaryData
     .filter(({ hash }) => hash === dataHash)
     .toArray()
@@ -341,7 +339,6 @@ export async function createOffer(): Promise<{id: string, offer: RTCSessionDescr
   const dataChannel = pc.createDataChannel('main', {id: 1, negotiated: true})
 
   pc.onconnectionstatechange = getConnectionEndHandler(connectionID, pc)
-  // pc.onicegatheringstatechange = console.log
   pc.onicecandidate = onICECandidate
   pc.ondatachannel = onDataChannel
   dataChannel.onmessage = onDataChannelMessage
@@ -382,7 +379,6 @@ export async function createAnswer(connectionID: string, offerer: string, offer:
 
   pc.onconnectionstatechange = getConnectionEndHandler(connectionID, pc)
   pc.ondatachannel = onDataChannel
-  // pc.onicegatheringstatechange = console.log
   pc.onicecandidate = onIceCandidate
 
   addPeerConnection({id: connectionID, pc, peerID: offerer, dataChannel})

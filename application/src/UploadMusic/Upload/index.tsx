@@ -54,12 +54,6 @@ const UploadContext = React.createContext<UploadContextType|undefined>(undefined
 export { UploadContext }
 
 export default function Upload() {
-  const styles: Styles = {
-    container: {
-      padding: '0 1rem'
-    }
-  }
-
   const history = useHistory()
   const [uploadState, setUploadState] = useState(contextValue)
   const [validationState, setValidationState] = useState<string>()
@@ -228,7 +222,9 @@ export default function Upload() {
           }
           history.push('/upload/details')
         }}
-      >DETAILS</Button>
+      >
+        DETAILS
+      </Button>
     </>
     if (step.match('details')) return <>
       <Button
@@ -296,3 +292,8 @@ export default function Upload() {
   }
 }
 
+const styles: Styles = {
+  container: {
+    padding: '0 1rem'
+  }
+}
