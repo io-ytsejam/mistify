@@ -16,7 +16,7 @@ const { hostname } = window.location
 const webSocket = new WebSocket(`ws://${hostname}:8080`);
 const userID = localStorage.getItem('id')
 
-onConnect(onMembersUpdate)
+connect(onMembersUpdate)
 
 function onMembersUpdate(peers: Array<string>) {
   // Because user joining the network initialize connections with others,
@@ -40,7 +40,7 @@ function addListeners() {
 }
 
 /** Hook-up all logic with WebSocket */
-export function onConnect(onMembersUpdate: Function) {
+export function connect(onMembersUpdate: Function) {
   webSocket.onopen = onOpen
 
   function onOpen () {

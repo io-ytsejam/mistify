@@ -1,20 +1,20 @@
 import theme from "../../Theme";
 import { createUseStyles } from "react-jss";
 import Button from "../../Button";
-import React, { useContext } from "react";
+import React, { ChangeEvent, useContext } from "react";
 import Input from "../../Input";
 import { UploadContext } from "../Upload";
 
 export default function UploadDetails () {
-  const { container, viewHeader, viewHeaderDesc,
-    albumPic, albumPicUpload, loadPictureButtonHelperText,
-    buttonWrapper, inputsWrapper } = useStyles()
   const uploadContextWithReducer = useContext(UploadContext)
   if (uploadContextWithReducer === undefined) throw new Error('Context must be provided')
   const { state: uploadState, setState: setUploadState } = uploadContextWithReducer
   const { album } = uploadState
   const { artwork } = album
   let fileInput: HTMLInputElement
+  const { container, viewHeader, viewHeaderDesc,
+    albumPic, albumPicUpload,
+    buttonWrapper, inputsWrapper } = useStyles({ artwork })
 
   function setFileInput(input: HTMLInputElement) {
     fileInput = input
@@ -28,34 +28,22 @@ export default function UploadDetails () {
       <p>Every upload must be grouped by some type</p>
     </div>
     <div className={albumPicUpload}>
-      <div className={albumPic}>
-        <img src={artwork} alt="Album"/>
-      </div>
+      {artwork && <div className={albumPic}>
+          <img src={artwork} alt="Album"/>
+      </div>}
       <div className={buttonWrapper}>
-        <Button onClick={() => {
-          fileInput.click()
-        }} size='s'>LOAD PICTURE</Button>
+        <Button
+          onClick={() => fileInput.click()}
+          size='s'
+        >
+          LOAD PICTURE
+        </Button>
         <input
           type="file"
           hidden
           ref={setFileInput}
-          onChange={({ target }) => {
-            const { files } = target
-            if (!files) return
-            files[0].arrayBuffer().then(ab => {
-              setUploadState(state => ({
-                ...state,
-                album: {
-                  ...state.album,
-                  artwork: URL.createObjectURL(new Blob([ab] ))
-                }
-              }))
-            })
-          }}
+          onChange={onFileInputChange}
         />
-        <p className={loadPictureButtonHelperText}>
-          If you leave it empty, picture from any audio track will be used
-        </p>
       </div>
     </div>
     <div className={inputsWrapper}>
@@ -90,6 +78,20 @@ export default function UploadDetails () {
       />
     </div>
   </div>
+
+  function onFileInputChange({ target }: ChangeEvent<HTMLInputElement>) {
+    const { files } = target
+    if (!files) return
+    files[0].arrayBuffer().then(ab => {
+      setUploadState(state => ({
+        ...state,
+        album: {
+          ...state.album,
+          artwork: URL.createObjectURL(new Blob([ab] ))
+        }
+      }))
+    })
+  }
 
   function handleNameChange({ target }: React.ChangeEvent<HTMLInputElement>) {
     setUploadState({
@@ -176,7 +178,7 @@ const useStyles = createUseStyles({
   },
   albumPicUpload: {
     display: 'grid',
-    gridTemplateColumns: '10rem auto',
+    gridTemplateColumns: props => props.artwork ? '10rem auto' : 'none',
     columnGap: '1rem'
   },
   loadPictureButtonHelperText: {

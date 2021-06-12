@@ -1,5 +1,6 @@
 /application/node_modules/
 /application/.idea/
+/application/build
 /server/.idea/
 /.idea/
 **/*.localz
